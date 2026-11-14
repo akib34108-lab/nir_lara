@@ -1,61 +1,75 @@
 @extends('layouts.master')
 @section('content')
-        <div class="content-wrapper">
-          <div class="row">
-            <div class="col-lg-12 grid-margin stretch-card">
-              <div class="card">
+<div class="content-wrapper">
+    <div class="row">
+        <div class="col-lg-12 grid-margin stretch-card">
+            <div class="card">
                 <div class="card-body">
-                  <h4 class="card-title">Hoverable Table</h4>
-                  <p class="card-description">
-                    Add class <code>.table-hover</code>
-                  </p>
-                  <button type="button" class="btn btn-primary btn-fw"><a href="{{ route('clients.create') }}" style="color: white;">Add Client</a></button>
-                  <div class="table-responsive">
-                    <table class="table table-hover">
-                      <thead>
-                        <tr>
-                          <th>User</th>
-                          <th>Product</th>
-                          <th>Sale</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>Jacob</td>
-                          <td>Photoshop</td>
-                          <td class="text-danger"> 28.76% <i class="ti-arrow-down"></i></td>
-                          <td><label class="badge badge-danger">Pending</label></td>
-                        </tr>
-                        <tr>
-                          <td>Messsy</td>
-                          <td>Flash</td>
-                          <td class="text-danger"> 21.06% <i class="ti-arrow-down"></i></td>
-                          <td><label class="badge badge-warning">In progress</label></td>
-                        </tr>
-                        <tr>
-                          <td>John</td>
-                          <td>Premier</td>
-                          <td class="text-danger"> 35.00% <i class="ti-arrow-down"></i></td>
-                          <td><label class="badge badge-info">Fixed</label></td>
-                        </tr>
-                        <tr>
-                          <td>Peter</td>
-                          <td>After effects</td>
-                          <td class="text-success"> 82.00% <i class="ti-arrow-up"></i></td>
-                          <td><label class="badge badge-success">Completed</label></td>
-                        </tr>
-                        <tr>
-                          <td>Dave</td>
-                          <td>53275535</td>
-                          <td class="text-success"> 98.05% <i class="ti-arrow-up"></i></td>
-                          <td><label class="badge badge-warning">In progress</label></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="card-title">Client List</h4>
+                        </div>
+                        <div class="col-md-4 justify-content-end d-flex">
+                            @can('clients-create')
+                                <a href="{{ route('clients.create') }}"
+                                   class="btn btn-primary btn-fw">
+                                    Add Client
+                                </a>
+                            @endcan
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Product</th>
+                                    <th>Sale</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($clients as $client)
+                                    <tr>
+                                        <td>{{ $client->name }}</td>
+                                        <td>{{ $client->company }}</td>
+                                        <td>{{ $client->email }}</td>
+                                        <td>{{ $client->status }}</td>
+                                        <td>
+                                            @can('clients-view')
+                                                <a href="{{ route('clients.show', $client->id) }}"
+                                                   class="btn btn-info btn-sm">
+                                                    View
+                                                </a>
+                                            @endcan
+                                            @can('clients-edit')
+                                                <a href="{{ route('clients.edit', $client->id) }}"
+                                                   class="btn btn-warning btn-sm">
+                                                    Edit
+                                                </a>
+                                            @endcan
+                                            @can('clients-delete')
+                                                <form action="{{ route('clients.destroy', $client->id) }}"
+                                                      method="POST"
+                                                      style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit"
+                                                            class="btn btn-danger btn-sm"
+                                                            onclick="return confirm('Are you sure you want to delete this client?')">
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            @endcan
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-              </div>
             </div>
         </div>
+    </div>
 @endsection

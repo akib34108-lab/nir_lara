@@ -21,15 +21,36 @@ class ClientController extends Controller
      */
     public function create()
     {
-        //
+        return view('clients.create');
     }
 
     /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        //
+            {
+                $validatedData = $request->validate([
+            'client_code' => 'required|unique:clients,client_code',
+            'client_type' => 'required|in:1,2,3,4',
+            'name' => 'required',
+            'company_name' => 'nullable',
+            'email' => 'nullable|email',
+            'phone' => 'required',
+            'alternate_phone' => 'nullable',
+            'website' => 'nullable|url',
+            'tax_number' => 'nullable',
+            'address' => 'nullable',
+            'city' => 'nullable',
+            'state' => 'nullable',
+            'country' => 'nullable',
+            'postal_code' => 'nullable',
+            'notes' => 'nullable',
+            'status' => 'required|in:1,2,3,4',
+        ]);
+
+        Client::create($validatedData);
+
+        return redirect()->route('clients.index')->with('success', 'Client created successfully.');
     }
 
     /**

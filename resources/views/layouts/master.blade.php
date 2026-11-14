@@ -304,10 +304,12 @@
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{{ route('clients.index') }}">
-              <i class="ti-user"></i>&nbsp;
-              <span class="menu-title">Clients</span>
-            </a>
+            @can('clients-list')
+                <a class="nav-link" href="{{ route('clients.index') }}">
+                    <i class="icon-head menu-icon"></i>
+                    <span class="menu-title">Clients</span>
+                </a>
+            @endcan
           </li>
           <li class="nav-item">
             <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
