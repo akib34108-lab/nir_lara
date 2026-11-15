@@ -16,7 +16,7 @@ public function up(): void
         $table->id();
 
         // Client Information
-        $table->string('client_code')->unique();
+        $table->string('client_code')->nullable()->unique();
         $table->tinyInteger('client_type')->default(1)->comment('1 = Individual, 2 = Company, 3 = Government, 4 = Organization');
         $table->string('name');
         $table->string('company_name')->nullable();

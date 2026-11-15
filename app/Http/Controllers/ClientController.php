@@ -21,7 +21,9 @@ class ClientController extends Controller
      */
     public function create()
     {
-        return view('clients.create');
+        $nextId = Client::withTrashed()->max('id') + 1;
+        $nextClientCode = 'CL-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
+        return view('clients.create', compact('nextClientCode'));
     }
 
     /**
@@ -58,7 +60,7 @@ class ClientController extends Controller
      */
     public function show(Client $client)
     {
-        //
+        return view('clients.show', compact('client'));
     }
 
     /**
@@ -66,7 +68,7 @@ class ClientController extends Controller
      */
     public function edit(Client $client)
     {
-        //
+        return view('clients.edit', compact('client'));
     }
 
     /**
@@ -74,7 +76,28 @@ class ClientController extends Controller
      */
     public function update(Request $request, Client $client)
     {
-        //
+        $validatedData = $request->validate([
+            'client_code' => 'required|unique:clients,client_code,' . $client->id,
+            'client_type' => 'required|in:1,2,3,4',
+            'name' => 'required',
+            'company_name' => 'nullable',
+            'email' => 'nullable|email',
+            'phone' => 'required',
+            'alternate_phone' => 'nullable',
+            'website' => 'nullable|url',
+            'tax_number' => 'nullable',
+            'address' => 'nullable',
+            'city' => 'nullable',
+            'state' => 'nullable',
+            'country' => 'nullable',
+            'postal_code' => 'nullable',
+            'notes' => 'nullable',
+            'status' => 'required|in:1,2,3,4',
+        ]);
+
+        $client->update($validatedData);
+
+        return redirect()->route('clients.index')->with('success', 'Client updated successfully.');
     }
 
     /**
@@ -82,6 +105,7 @@ class ClientController extends Controller
      */
     public function destroy(Client $client)
     {
-        //
+        $client->delete();
+        return redirect()->route('clients.index')->with('success', 'Client deleted successfully.');
     }
 }

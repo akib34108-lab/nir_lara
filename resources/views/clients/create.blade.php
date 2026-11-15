@@ -16,7 +16,7 @@
                                     <label class="col-form-label">Client Code</label>
                                     <input type="text" name="client_code"
                                         class="form-control"
-                                        value="{{ old('client_code') }}"
+                                        value="{{ $nextClientCode }}" readonly
                                         placeholder="Enter client code" required>
                                     @error('client_code')
                                         <small class="text-danger">{{ $message }}</small>
@@ -78,10 +78,9 @@
                                     @enderror
                                 </div>
                             </div>
-
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Alternate Phone</label>
-                                <div class="col-sm-9">
+                                <div class="col-sm-4">
+                                    <label class="col-form-label">Alternate Phone</label>
                                     <input type="text" name="alternate_phone"
                                         class="form-control"
                                         value="{{ old('alternate_phone') }}"
@@ -90,11 +89,8 @@
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Website</label>
-                                <div class="col-sm-9">
+                                <div class="col-sm-4">
+                                    <label class="col-form-label">Website</label>
                                     <input type="text" name="website"
                                         class="form-control"
                                         value="{{ old('website') }}"
@@ -103,11 +99,8 @@
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Tax Number</label>
-                                <div class="col-sm-9">
+                                <div class="col-sm-4">
+                                <label class="col-form-label">Tax Number</label>
                                     <input type="text" name="tax_number"
                                         class="form-control"
                                         value="{{ old('tax_number') }}"
@@ -117,26 +110,17 @@
                                     @enderror
                                 </div>
                             </div>
-
-                            <hr>
-
-                            {{-- Address Information --}}
-                            <h5 class="mb-3">Address Information</h5>
-
                             <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Address</label>
-                                <div class="col-sm-9">
+                                <div class="col-sm-4">
+                                    <label class="col-form-label">Address</label>
                                     <textarea name="address" class="form-control" rows="3"
                                         placeholder="Enter full address">{{ old('address') }}</textarea>
                                     @error('address')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">City</label>
-                                <div class="col-sm-9">
+                                <div class="col-sm-4">
+                                    <label class="col-form-label">City</label>
                                     <input type="text" name="city"
                                         class="form-control"
                                         value="{{ old('city') }}"
@@ -145,11 +129,8 @@
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">State</label>
-                                <div class="col-sm-9">
+                                <div class="col-sm-4">
+                                    <label class="col-form-label">State</label>
                                     <input type="text" name="state"
                                         class="form-control"
                                         value="{{ old('state') }}"
@@ -159,7 +140,9 @@
                                     @enderror
                                 </div>
                             </div>
-
+                            {{-- Additional Information --}}
+                            <h5 class="mb-3">Additional Information</h5>
+                            <hr>
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Country</label>
                                 <div class="col-sm-9">
@@ -172,7 +155,6 @@
                                     @enderror
                                 </div>
                             </div>
-
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Postal Code</label>
                                 <div class="col-sm-9">
@@ -185,12 +167,6 @@
                                     @enderror
                                 </div>
                             </div>
-
-                            <hr>
-
-                            {{-- Additional Information --}}
-                            <h5 class="mb-3">Additional Information</h5>
-
                             <div class="form-group row">
                                 <label class="col-sm-3 col-form-label">Notes</label>
                                 <div class="col-sm-9">

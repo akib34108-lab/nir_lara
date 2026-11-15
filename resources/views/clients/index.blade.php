@@ -22,20 +22,22 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>User</th>
-                                    <th>Product</th>
-                                    <th>Sale</th>
-                                    <th>Status</th>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Company</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($clients as $client)
                                     <tr>
+                                        <td>{{ $client->client_code }}</td>
                                         <td>{{ $client->name }}</td>
-                                        <td>{{ $client->company }}</td>
+                                        <td>{{ $client->company_name }}</td>
                                         <td>{{ $client->email }}</td>
-                                        <td>{{ $client->status }}</td>
+                                        <td>{{ $client->phone }}</td>
                                         <td>
                                             @can('clients-view')
                                                 <a href="{{ route('clients.show', $client->id) }}"
@@ -57,7 +59,7 @@
                                                     @method('DELETE')
                                                     <button type="submit"
                                                             class="btn btn-danger btn-sm"
-                                                            onclick="return confirm('Are you sure you want to delete this client?')">
+                                                            onclick="return confirm('Are you sure you want to delete ' + '{{ $client->name }}' + '?')">
                                                         Delete
                                                     </button>
                                                 </form>
