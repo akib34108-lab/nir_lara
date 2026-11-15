@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\UserListController;
+use App\Http\Controllers\RoleController;
 
 Auth::routes();
 
@@ -25,4 +27,14 @@ Route::middleware(['auth'])->group(function () {
     ->middlewareFor('show', 'permission:clients-view')
     ->middlewareFor(['edit', 'update'], 'permission:clients-edit')
     ->middlewareFor('destroy', 'permission:clients-delete');
+
+    Route::resource('users-list', UserListController::class)
+    ->middlewareFor('index', 'permission:users-list');
+
+    Route::resource('roles', RoleController::class)
+    ->middlewareFor('index', 'permission:roles-list')
+    ->middlewareFor(['create', 'store'], 'permission:roles-create')
+    ->middlewareFor('show', 'permission:roles-view')
+    ->middlewareFor(['edit', 'update'], 'permission:roles-edit')
+    ->middlewareFor('destroy', 'permission:roles-delete');
 });

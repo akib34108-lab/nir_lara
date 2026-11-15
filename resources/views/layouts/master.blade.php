@@ -303,28 +303,31 @@
               <span class="menu-title">Dashboard</span>
             </a>
           </li>
-          <li class="nav-item">
-            @can('clients-list')
-                <a class="nav-link" href="{{ route('clients.index') }}">
-                    <i class="icon-head menu-icon"></i>
-                    <span class="menu-title">Clients</span>
-                </a>
-            @endcan
-          </li>
+          @can('users-list')
           <li class="nav-item">
             <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
-              <i class="icon-layout menu-icon"></i>
-              <span class="menu-title">UI Elements</span>
+              <i class="icon-contract menu-icon"></i>
+              <span class="menu-title">Users & Access</span>
               <i class="menu-arrow"></i>
             </a>
             <div class="collapse" id="ui-basic">
               <ul class="nav flex-column sub-menu">
-                <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/buttons.html')}}">Buttons</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/dropdowns.html')}}">Dropdowns</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/typography.html')}}">Typography</a></li>
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users-list.index') }}">Users List</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ route('roles.index') }}">Roles</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/typography.html')}}">Permissions</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/typography.html')}}">Activity Logs</a></li>
               </ul>
             </div>
           </li>
+          @endcan
+          @can('clients-list')
+          <li class="nav-item">
+                <a class="nav-link" href="{{ route('clients.index') }}">
+                    <i class="icon-head menu-icon"></i>
+                    <span class="menu-title">Clients</span>
+                </a>
+          </li>
+          @endcan
           <li class="nav-item">
             <a class="nav-link" data-toggle="collapse" href="#form-elements" aria-expanded="false" aria-controls="form-elements">
               <i class="icon-columns menu-icon"></i>
@@ -395,9 +398,8 @@
         </ul>
       </nav>
     <!-- partial -->
-      <div class="main-panel">
+    <div class="main-panel">
         @yield('content')
-      </div>
       <!-- content-wrapper ends -->
         <!-- partial:partials/_footer.html -->
         <footer class="footer">
@@ -439,6 +441,5 @@
   <script src="{{asset('assets/js/Chart.roundedBarCharts.js')}}"></script>
   <!-- End custom js for this page-->
 </body>
-
 </html>
 

@@ -37,7 +37,14 @@
                   <input type="email" name="email" class="form-control form-control-lg" id="exampleInputEmail1" placeholder="Username" required>
                 </div>
                 <div class="form-group">
-                  <input type="password" name="password" class="form-control form-control-lg" id="exampleInputPassword1" placeholder="Password" required>
+                  <div class="input-group">
+                    <input type="password" name="password" class="form-control form-control-lg" id="exampleInputPassword1" placeholder="Password" required>
+                    <div class="input-group-append">
+                        <span class="input-group-text" style="cursor: pointer; background: #fff;" onclick="togglePassword('exampleInputPassword1', this)">
+                            <i class="ti-eye"></i>
+                        </span>
+                    </div>
+                </div>
                 </div>
                 <div class="mt-3">
                     <button type="submit" class="btn btn-block btn-primary btn-lg font-weight-medium auth-form-btn">
@@ -83,6 +90,21 @@
   <script src="{{ asset('assets/js/settings.js') }}"></script>
   <script src="{{ asset('assets/js/todolist.js') }}"></script>
   <!-- endinject -->
+
+  <script>
+    function togglePassword(inputId, el) {
+        const input = document.getElementById(inputId);
+        const icon = el.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('ti-eye', 'ti-lock');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('ti-lock', 'ti-eye');
+        }
+    }
+  </script>
 </body>
 
 </html>

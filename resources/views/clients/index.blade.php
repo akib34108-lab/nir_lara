@@ -5,6 +5,9 @@
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
+                    @if(session('success'))
+                        <div class="alert alert-success">{{ session('success') }}</div>
+                    @endif
                     <div class="row">
                         <div class="col-md-8">
                             <h4 class="card-title">Client List</h4>
@@ -31,7 +34,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($clients as $client)
+                                @forelse($clients as $client)
                                     <tr>
                                         <td>{{ $client->client_code }}</td>
                                         <td>{{ $client->name }}</td>
@@ -59,19 +62,30 @@
                                                     @method('DELETE')
                                                     <button type="submit"
                                                             class="btn btn-danger btn-sm"
-                                                            onclick="return confirm('Are you sure you want to delete ' + '{{ $client->name }}' + '?')">
+                                                            onclick="return confirm('Are you sure you want to delete ' + '{{ $client->name }}?')">
                                                         Delete
                                                     </button>
                                                 </form>
                                             @endcan
                                         </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            No clients found.
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
+                    </div>
+                    {{-- Pagination --}}
+                    <div class="mt-3 d-flex justify-content-center">
+                        {{ $clients->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 @endsection

@@ -40,10 +40,27 @@
                   <input type="email" name="email" class="form-control form-control-lg" id="exampleInputEmail1" placeholder="Email" required>
                 </div>
                 <div class="form-group">
-                  <input type="password" name="password" class="form-control form-control-lg" id="exampleInputPassword1" placeholder="Password" required>
+                  <div class="input-group">
+                    <input id="password" type="password" name="password" class="form-control form-control-lg @error('password') is-invalid @enderror" placeholder="Password" required autocomplete="new-password">
+                    <div class="input-group-append">
+                        <span class="input-group-text" style="cursor: pointer; background: #fff;" onclick="togglePassword('password', this)">
+                            <i class="ti-eye"></i>
+                        </span>
+                    </div>
+                </div>
+                @error('password')
+                    <span class="text-danger small">{{ $message }}</span>
+                @enderror
                 </div>
                 <div class="form-group">
-                    <input type="password" name="password_confirmation" class="form-control form-control-lg" placeholder="Confirm Password" required>
+                    <div class="input-group">
+                      <input id="password-confirm" type="password" name="password_confirmation" class="form-control form-control-lg" placeholder="Confirm Password" required autocomplete="new-password">
+                      <div class="input-group-append">
+                          <span class="input-group-text" style="cursor: pointer; background: #fff;" onclick="togglePassword('password-confirm', this)">
+                              <i class="ti-eye"></i>
+                          </span>
+                      </div>
+                  </div>
                 </div>
                 <div class="mb-4">
                   <div class="form-check">
@@ -83,6 +100,20 @@
   <script src="{{ asset('assets/js/settings.js') }}"></script>
   <script src="{{ asset('assets/js/todolist.js') }}"></script>
   <!-- endinject -->
+   <script>
+    function togglePassword(inputId, el) {
+        const input = document.getElementById(inputId);
+        const icon = el.querySelector('i');
+
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('ti-eye', 'ti-lock');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('ti-lock', 'ti-eye');
+        }
+    }
+  </script>
 </body>
 
 </html>

@@ -8,16 +8,16 @@
         4 => 'Organization',
     ];
     $clientStatuses = [
-        'active' => 'Active',
-        'inactive' => 'Inactive',
-        'pending' => 'Pending',
-        'archived' => 'Archived',
+        '1' => 'Active',
+        '2' => 'Inactive',
+        '3' => 'Pending',
+        '4' => 'Blocked',
     ];
     $statusColors = [
-        'active' => 'success',
-        'inactive' => 'secondary',
-        'pending' => 'warning',
-        'archived' => 'dark',
+        '1' => 'success',
+        '2' => 'secondary',
+        '3' => 'warning',
+        '4' => 'danger',
     ];
     $clientType = $clientTypes[$client->client_type] ?? 'Unknown';
     $clientStatus = $clientStatuses[$client->status] ?? 'Unknown';
@@ -85,6 +85,7 @@
         justify-content: center;
         color: #7138e8;
         font-size: 48px;
+        font-weight: 700;
         border: 5px solid #fff;
         box-shadow: 0 0 0 4px #eee5ff;
     }
@@ -246,54 +247,47 @@
         }
     }
 
-.client-detail-tabs {
-    border-bottom: 1px solid #eee;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.client-detail-tabs .nav-link {
-    color: #777;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 13px 16px;
-    border: none;
-    border-bottom: 3px solid transparent;
-    border-radius: 0;
-}
-
-.client-detail-tabs .nav-link:hover {
-    color: #7138e8;
-    background: #faf8ff;
-}
-
-.client-detail-tabs .nav-link.active {
-    color: #7138e8;
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid #7138e8;
-}
-
-.client-tab-content {
-    padding-top: 25px;
-    min-height: 400px;
-}
-
-.client-tab-content .tab-pane {
-    animation: clientTabFade .25s ease-in-out;
-}
-
-@keyframes clientTabFade {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
+    .client-detail-tabs {
+        border-bottom: 1px solid #eee;
+        gap: 5px;
+        flex-wrap: wrap;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .client-detail-tabs .nav-link {
+        color: #777;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 13px 16px;
+        border: none;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
     }
-}
-
+    .client-detail-tabs .nav-link:hover {
+        color: #7138e8;
+        background: #faf8ff;
+    }
+    .client-detail-tabs .nav-link.active {
+        color: #7138e8;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid #7138e8;
+    }
+    .client-tab-content {
+        padding-top: 25px;
+        min-height: 400px;
+    }
+    .client-tab-content .tab-pane {
+        animation: clientTabFade .25s ease-in-out;
+    }
+    @keyframes clientTabFade {
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 <div class="content-wrapper">
     <div class="client-view-page">
@@ -309,7 +303,7 @@
                     <i class="ti-arrow-left"></i> Back
                 </a>
                 <a href="{{ route('clients.edit', $client->id) }}"
-                class="client-edit-btn">
+                class="btn btn-light">
                     <i class="ti-pencil"></i> Edit Client
                 </a>
             </div>
@@ -319,11 +313,7 @@
             <div class="col-lg-4 col-md-5 mb-4">
                 <div class="client-profile-card">
                     <div class="client-avatar">
-                        @if($client->client_type == 2 || $client->client_type == 3 || $client->client_type == 4)
-                            <i class="ti-briefcase"></i>
-                        @else
-                            <i class="ti-user"></i>
-                        @endif
+                        {{ strtoupper(mb_substr($client->name, 0, 1)) }}
                     </div>
                     <h4>{{ $client->name }}</h4>
                     <div class="client-company-name">
@@ -370,15 +360,6 @@
                         <li class="nav-item">
                             <a class="nav-link active"
                             data-toggle="tab"
-                            href="#overview"
-                            role="tab">
-                                <i class="ti-dashboard mr-2"></i>
-                                Overview
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link"
-                            data-toggle="tab"
                             href="#client-information"
                             role="tab">
                                 <i class="ti-user mr-2"></i>
@@ -397,91 +378,8 @@
                     </ul>
                     <!-- Tab Content -->
                     <div class="tab-content client-tab-content">
-                        <!-- Tab 1: Overview -->
+                        <!-- Tab 1: Client Information -->
                         <div class="tab-pane fade show active"
-                            id="overview"
-                            role="tabpanel">
-                            <h5 class="client-card-title">
-                                Client Overview
-                            </h5>
-                            <div class="row">
-                                <div class="col-md-4 col-6 mb-4">
-                                    <div class="client-overview-item">
-                                        <div class="client-overview-icon" style="background:#7138e8;">
-                                            <i class="ti-id-badge"></i>
-                                        </div>
-                                        <h5>Client Code</h5>
-                                        <h3 style="font-size:17px;">
-                                            {{ $client->client_code }}
-                                        </h3>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 col-6 mb-4">
-                                    <div class="client-overview-item">
-                                        <div class="client-overview-icon" style="background:#16a34a;">
-                                            <i class="ti-briefcase"></i>
-                                        </div>
-                                        <h5>Client Type</h5>
-                                        <h3 style="font-size:17px;">
-                                            {{ $clientType }}
-                                        </h3>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 col-6 mb-4">
-                                    <div class="client-overview-item">
-                                        <div class="client-overview-icon" style="background:#2563eb;">
-                                            <i class="ti-check-box"></i>
-                                        </div>
-                                        <h5>Status</h5>
-                                        <h3 style="font-size:17px;">
-                                            {{ $clientStatus }}
-                                        </h3>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr>
-                            <h5 class="client-card-title">
-                                Quick Information
-                            </h5>
-                            <div class="client-info-row">
-                                <div class="client-info-icon">
-                                    <i class="ti-email"></i>
-                                </div>
-                                <div class="client-info-label">Email Address</div>
-                                <div class="client-info-value">
-                                    {{ $client->email ?? 'N/A' }}
-                                </div>
-                            </div>
-                            <div class="client-info-row">
-                                <div class="client-info-icon">
-                                    <i class="ti-mobile"></i>
-                                </div>
-                                <div class="client-info-label">Phone Number</div>
-                                <div class="client-info-value">
-                                    {{ $client->phone }}
-                                </div>
-                            </div>
-                            <div class="client-info-row">
-                                <div class="client-info-icon">
-                                    <i class="ti-calendar"></i>
-                                </div>
-                                <div class="client-info-label">Member Since</div>
-                                <div class="client-info-value">
-                                    {{ $client->created_at?->format('d M, Y') ?? 'N/A' }}
-                                </div>
-                            </div>
-                            <div class="client-info-row">
-                                <div class="client-info-icon">
-                                    <i class="ti-time"></i>
-                                </div>
-                                <div class="client-info-label">Last Updated</div>
-                                <div class="client-info-value">
-                                    {{ $client->updated_at?->format('d M, Y') ?? 'N/A' }}
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Tab 2: Client Information -->
-                        <div class="tab-pane fade"
                             id="client-information"
                             role="tabpanel">
                             <h5 class="client-card-title">
@@ -530,7 +428,7 @@
                                 </div>
                                 <div class="client-info-label">Phone Number</div>
                                 <div class="client-info-value">
-                                    {{ $client->phone }}
+                                    {{ $client->phone ?? 'N/A' }}
                                 </div>
                             </div>
                             <div class="client-info-row">
@@ -569,7 +467,7 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Tab 3: Additional Information -->
+                        <!-- Tab 2: Additional Information -->
                         <div class="tab-pane fade"
                             id="additional-information"
                             role="tabpanel">
@@ -635,4 +533,7 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 @endsection

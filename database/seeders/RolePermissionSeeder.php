@@ -49,6 +49,12 @@ class RolePermissionSeeder extends Seeder
             'materials' => ['list', 'create', 'view', 'edit', 'delete'],
 
             'clients' => ['list', 'create', 'view', 'edit', 'delete'],
+
+            'roles' => ['list', 'create', 'edit', 'delete'],
+            
+            'permissions' => ['list', 'create', 'edit', 'delete'],
+            
+            'activity-log' => ['list'],
         ];
 
         foreach ($modules as $module => $actions) {
