@@ -16,7 +16,7 @@
                             @can('clients-create')
                                 <a href="{{ route('clients.create') }}"
                                    class="btn btn-primary btn-fw">
-                                    Add Client
+                                    <i class="ti-plus"></i> Add Client
                                 </a>
                             @endcan
                         </div>
@@ -30,7 +30,7 @@
                                     <th>Company</th>
                                     <th>Email</th>
                                     <th>Phone</th>
-                                    <th>Action</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -42,31 +42,42 @@
                                         <td>{{ $client->email }}</td>
                                         <td>{{ $client->phone }}</td>
                                         <td>
-                                            @can('clients-view')
-                                                <a href="{{ route('clients.show', $client->id) }}"
-                                                   class="btn btn-info btn-sm">
-                                                    View
-                                                </a>
-                                            @endcan
-                                            @can('clients-edit')
-                                                <a href="{{ route('clients.edit', $client->id) }}"
-                                                   class="btn btn-warning btn-sm">
-                                                    Edit
-                                                </a>
-                                            @endcan
-                                            @can('clients-delete')
-                                                <form action="{{ route('clients.destroy', $client->id) }}"
-                                                      method="POST"
-                                                      style="display:inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                            class="btn btn-danger btn-sm"
-                                                            onclick="return confirm('Are you sure you want to delete ' + '{{ $client->name }}?')">
-                                                        Delete
-                                                    </button>
-                                                </form>
-                                            @endcan
+                                            <div class="dropdown">
+                                                <button class="btn btn-light btn-sm"
+                                                        type="button"
+                                                        data-toggle="dropdown"
+                                                        aria-haspopup="true"
+                                                        aria-expanded="false">
+                                                    <i class="ti-more-alt"></i>
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    @can('clients-view')
+                                                        <a href="{{ route('clients.show', $client->id) }}"
+                                                        class="dropdown-item">
+                                                            <i class="ti-eye mr-2"></i> View
+                                                        </a>
+                                                    @endcan
+                                                    @can('clients-edit')
+                                                        <a href="{{ route('clients.edit', $client->id) }}"
+                                                        class="dropdown-item">
+                                                            <i class="ti-pencil mr-2"></i> Edit
+                                                        </a>
+                                                    @endcan
+                                                    @can('clients-delete')
+                                                        <form action="{{ route('clients.destroy', $client->id) }}"
+                                                            method="POST"
+                                                            style="display:inline;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit"
+                                                                class="dropdown-item text-danger
+                                                                    onclick="return confirm('Are you sure you want to delete ' + '{{ $client->name }}?')">
+                                                                <i class="ti-trash mr-2"></i> Delete
+                                                            </button>
+                                                        </form>
+                                                    @endcan
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty

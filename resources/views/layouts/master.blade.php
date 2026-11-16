@@ -297,12 +297,6 @@
       <!-- partial:partials/_sidebar.html -->
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
         <ul class="nav">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ route('welcome') }}">
-              <i class="icon-grid menu-icon"></i>
-              <span class="menu-title">Dashboard</span>
-            </a>
-          </li>
           @can('users-list')
           <li class="nav-item">
             <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
@@ -314,7 +308,7 @@
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users-list.index') }}">Users List</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{{ route('roles.index') }}">Roles</a></li>
-                <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/typography.html')}}">Permissions</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ route('permissions.index') }}">Permissions</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{{asset('assets/pages/ui-features/typography.html')}}">Activity Logs</a></li>
               </ul>
             </div>
@@ -440,6 +434,7 @@
   <script src="{{asset('assets/js/dashboard.js')}}"></script>
   <script src="{{asset('assets/js/Chart.roundedBarCharts.js')}}"></script>
   <!-- End custom js for this page-->
+   @stack('scripts')
 </body>
 </html>
 

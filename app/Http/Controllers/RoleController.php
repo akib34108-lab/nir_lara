@@ -24,11 +24,12 @@ class RoleController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:roles,name',
-            'permissions' => 'required|array',
+            'permissions' => 'sometimes|array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         $role = Role::create(['name' => $request->input('name'), 'guard_name' => 'web']);
-        $role->syncPermissions($request->input('permissions'));
+        $role->syncPermissions($request->input('permissions', []));
 
         return redirect()->route('roles.index')
             ->with('success', 'Role created successfully.');
@@ -51,11 +52,12 @@ class RoleController extends Controller
     {
         $request->validate([
             'name' => 'required|unique:roles,name,' . $role->id,
-            'permissions' => 'required|array',
+            'permissions' => 'sometimes|array',
+            'permissions.*' => 'exists:permissions,name',
         ]);
 
         $role->update(['name' => $request->input('name')]);
-        $role->syncPermissions($request->input('permissions'));
+        $role->syncPermissions($request->input('permissions', []));
 
         return redirect()->route('roles.index')
             ->with('success', 'Role updated successfully.');

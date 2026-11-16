@@ -9,6 +9,7 @@
                         <p class="card-description">
                             Update client information below
                         </p>
+                        <hr/>
                         <form class="forms-sample" method="POST" action="{{ route('clients.update', $client->id) }}">
                             @csrf
                             @method('PUT')
@@ -193,13 +194,13 @@
                                     @enderror
                                 </div>
                             </div>
-
+                            <hr/>
                             <button type="submit" class="btn btn-primary mr-2">
-                                Update Client
+                                <i class="ti-pencil"></i> Update Client
                             </button>
 
                             <a href="{{ route('clients.index') }}" class="btn btn-light">
-                                Cancel
+                                <i class="ti-arrow-left"></i> Cancel
                             </a>
 
                         </form>

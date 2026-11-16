@@ -9,6 +9,7 @@
                         <p class="card-description">
                             Enter client information below
                         </p>
+                        <hr/>
                         <form class="forms-sample" method="POST" action="{{ route('clients.store') }}">
                             @csrf
                             <div class="form-group row">
@@ -192,13 +193,13 @@
                                     @enderror
                                 </div>
                             </div>
-
+                            <hr/>
                             <button type="submit" class="btn btn-primary mr-2">
-                                Save Client
+                                <i class="ti-save"></i> Save Client
                             </button>
 
                             <a href="{{ route('clients.index') }}" class="btn btn-light">
-                                Cancel
+                                <i class="ti-arrow-left"></i> Cancel
                             </a>
 
                         </form>

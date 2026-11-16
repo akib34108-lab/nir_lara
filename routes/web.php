@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\UserListController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\PermissionController;
 
 Auth::routes();
 
@@ -37,4 +38,7 @@ Route::middleware(['auth'])->group(function () {
     ->middlewareFor('show', 'permission:roles-view')
     ->middlewareFor(['edit', 'update'], 'permission:roles-edit')
     ->middlewareFor('destroy', 'permission:roles-delete');
+
+    Route::resource('permissions', PermissionController::class)
+    ->except(['create', 'edit']);
 });
