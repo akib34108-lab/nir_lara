@@ -99,6 +99,10 @@
             </a>
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
               <a class="dropdown-item">
+                <i class="ti-id-badge text-primary"></i>
+                {{ Auth::user()->getRoleNames()->first() }}
+              </a>
+              <a class="dropdown-item">
                 <i class="ti-settings text-primary"></i>
                 Settings
               </a>
@@ -299,12 +303,12 @@
         <ul class="nav">
           @can('users-list')
           <li class="nav-item">
-            <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
+            <a class="nav-link" data-toggle="collapse" href="#users-access-menu" aria-expanded="false" aria-controls="users-access-menu">
               <i class="icon-contract menu-icon"></i>
               <span class="menu-title">Users & Access</span>
               <i class="menu-arrow"></i>
             </a>
-            <div class="collapse" id="ui-basic">
+            <div class="collapse" id="users-access-menu">
               <ul class="nav flex-column sub-menu">
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users-list.index') }}">Users List</a></li>
                 <li class="nav-item"> <a class="nav-link" href="{{ route('roles.index') }}">Roles</a></li>
@@ -316,10 +320,17 @@
           @endcan
           @can('clients-list')
           <li class="nav-item">
-                <a class="nav-link" href="{{ route('clients.index') }}">
-                    <i class="icon-head menu-icon"></i>
-                    <span class="menu-title">Clients</span>
-                </a>
+            <a class="nav-link" data-toggle="collapse" href="#projects-menu" aria-expanded="false" aria-controls="projects-menu">
+              <i class="icon-briefcase menu-icon"></i>
+              <span class="menu-title">Projects Portfolio</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="projects-menu">
+              <ul class="nav flex-column sub-menu">
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('clients.*') ? 'active' : '' }}" href="{{ route('clients.index') }}">Clients List</a></li>
+                <li class="nav-item"> <a class="nav-link" href="{{ route('projects.index') }}">Projects</a></li>
+              </ul>
+            </div>
           </li>
           @endcan
           <li class="nav-item">

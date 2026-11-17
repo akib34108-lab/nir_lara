@@ -7,6 +7,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\UserListController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\ProjectsController;
 
 Auth::routes();
 
@@ -44,4 +45,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('permissions', PermissionController::class)
     ->except(['create', 'edit']);
+
+    Route::resource('projects', ProjectsController::class)
+    ->middlewareFor('index', 'permission:projects-list')
+    ->middlewareFor(['create', 'store'], 'permission:projects-create')
+    ->middlewareFor('show', 'permission:projects-view')
+    ->middlewareFor(['edit', 'update'], 'permission:projects-edit')
+    ->middlewareFor('destroy', 'permission:projects-delete');
 });
