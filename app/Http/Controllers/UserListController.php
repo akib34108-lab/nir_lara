@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class UserListController extends Controller
 {
@@ -13,23 +14,23 @@ class UserListController extends Controller
     public function index()
     {
         $users = User::with('roles')->latest()->paginate(10);
-        return view('user_access.users.index', compact('users'));
+        $roles = Role::orderBy('name')->get();
+        return view('user_access.users.index', compact('users', 'roles'));
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function assignRole(Request $request, User $user)
     {
-        //
-    }
+        $request->validate([
+            'role' => 'required|exists:roles,name',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
+        $user->syncRoles($request->role);
+
+        return redirect()->route('users-list.index')
+            ->with('success', 'Role assigned successfully.');
     }
 
     /**

@@ -31,6 +31,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('users-list', UserListController::class)
     ->middlewareFor('index', 'permission:users-list');
+    Route::put('users-list/{user}/role', [UserListController::class, 'assignRole'])
+    ->middleware('permission:users-edit')
+    ->name('users-list.assignRole');
 
     Route::resource('roles', RoleController::class)
     ->middlewareFor('index', 'permission:roles-list')
