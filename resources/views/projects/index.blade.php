@@ -47,19 +47,25 @@
                                                     <i class="ti-more-alt"></i>
                                                 </button>
                                                 <div class="dropdown-menu dropdown-menu-right">
+                                                    @can('projects-view')
                                                     <a href="{{ route('projects.show', $project->id) }}" class="dropdown-item">
                                                         <i class="ti-eye mr-2"></i> View
                                                     </a>
+                                                    @endcan
+                                                    @can('projects-edit')
                                                     <a href="{{ route('projects.edit', $project->id) }}" class="dropdown-item">
                                                         <i class="ti-pencil-alt mr-2"></i> Edit
                                                     </a>
+                                                    @endcan
+                                                    @can('projects-delete')
                                                     <form action="{{ route('projects.destroy', $project->id) }}" method="POST" style="display:inline;">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="dropdown-item">
+                                                        <button type="submit" class="dropdown-item text-danger onSubmit="return confirm('Are you sure you want to delete ' + '{{ $project->projects_name }}?')">
                                                             <i class="ti-trash mr-2"></i> Delete
                                                         </button>
                                                     </form>
+                                                    @endcan
                                                 </div>
                                             </div>
                                         </td>

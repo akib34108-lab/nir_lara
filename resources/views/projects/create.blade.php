@@ -136,10 +136,12 @@
                                 <div class="col-sm-4">
                                     <label class="col-sm-3 col-form-label">Status</label>
                                     <select name="status" class="form-control" required>
-                                        <option value="1" {{ old('status', 1) == 1 ? 'selected' : '' }}>Active</option>
-                                        <option value="2" {{ old('status') == 2 ? 'selected' : '' }}>Inactive</option>
-                                        <option value="3" {{ old('status') == 3 ? 'selected' : '' }}>Pending</option>
-                                        <option value="4" {{ old('status') == 4 ? 'selected' : '' }}>Blocked</option>
+                                        <option value="1" {{ old('status', 1) == 1 ? 'selected' : '' }}>Planning</option>
+                                        <option value="2" {{ old('status') == 2 ? 'selected' : '' }}>Pending</option>
+                                        <option value="3" {{ old('status') == 3 ? 'selected' : '' }}>Active</option>
+                                        <option value="4" {{ old('status') == 4 ? 'selected' : '' }}>On Hold</option>
+                                        <option value="5" {{ old('status') == 5 ? 'selected' : '' }}>Completed</option>
+                                        <option value="6" {{ old('status') == 6 ? 'selected' : '' }}>Cancelled</option>
                                     </select>
                                     @error('status')
                                         <small class="text-danger">{{ $message }}</small>
@@ -147,62 +149,24 @@
                                 </div>
                             </div>
                             <div class="form-group row">
-                                <label class="col-sm-12 col-form-label">Progress</label>
+                                <div class="col-sm-12">
+                                    <label class="col-form-label">Progress</label>
                                     <input type="number" name="progress"
                                         class="form-control"
-                                        value="{{ old('country', 'Bangladesh') }}"
-                                        placeholder="Enter country">
-                                    @error('country')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Postal Code</label>
-                                <div class="col-sm-9">
-                                    <input type="text" name="postal_code"
-                                        class="form-control"
-                                        value="{{ old('postal_code') }}"
-                                        placeholder="Enter postal code">
-                                    @error('postal_code')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Notes</label>
-                                <div class="col-sm-9">
-                                    <textarea name="notes" class="form-control" rows="3"
-                                        placeholder="Enter additional notes">{{ old('notes') }}</textarea>
-                                    @error('notes')
-                                        <small class="text-danger">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="form-group row">
-                                <label class="col-sm-3 col-form-label">Status</label>
-                                <div class="col-sm-9">
-                                    <select name="status" class="form-control" required>
-                                        <option value="1" {{ old('status', 1) == 1 ? 'selected' : '' }}>Active</option>
-                                        <option value="2" {{ old('status') == 2 ? 'selected' : '' }}>Inactive</option>
-                                        <option value="3" {{ old('status') == 3 ? 'selected' : '' }}>Pending</option>
-                                        <option value="4" {{ old('status') == 4 ? 'selected' : '' }}>Blocked</option>
-                                    </select>
-                                    @error('status')
+                                        value="{{ old('progrss', '00') }}"
+                                        placeholder="Enter Progress">
+                                    @error('progress')
                                         <small class="text-danger">{{ $message }}</small>
                                     @enderror
                                 </div>
                             </div>
                             <hr/>
                             <button type="submit" class="btn btn-primary mr-2">
-                                <i class="ti-save"></i> Save Client
+                                <i class="ti-save"></i> Save Project
                             </button>
-
-                            <a href="{{ route('clients.index') }}" class="btn btn-light">
+                            <a href="{{ route('projects.index') }}" class="btn btn-light">
                                 <i class="ti-arrow-left"></i> Cancel
                             </a>
-
                         </form>
                     </div>
                 </div>

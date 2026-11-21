@@ -8,4 +8,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Projects extends Model
 {
     use softDeletes;
+    protected $fillable = [
+    'project_code',
+    'client_id',
+    'project_name',
+    'description',
+    'project_manager_id',
+    'start_date',
+    'expected_end_date',
+    'actual_end_date',
+    'estimated_budget',
+    'progress',
+    'status',
+    'site_address',
+    'city',
+];
 }

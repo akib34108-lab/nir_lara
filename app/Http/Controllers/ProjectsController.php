@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Projects;
+use App\Models\Client;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ProjectsController extends Controller
@@ -24,7 +26,7 @@ class ProjectsController extends Controller
         $nextId = (Projects::withTrashed()->max('id') ?? 0) + 1;
         $nextProjectCode = 'PR-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
         $clients = Client::latest()->get();
-        $projectManagers = User::where('is_project_manager', true)->get();
+        $projectManagers = User::role('Project Manager')->get();
         return view('projects.create', compact('nextProjectCode', 'clients', 'projectManagers'));
     }
 
@@ -45,7 +47,7 @@ class ProjectsController extends Controller
             'expected_end_date' => 'required|date|after_or_equal:start_date',
             'actual_end_date' => 'nullable|date|after_or_equal:start_date',
             'estimated_budget' => 'required|numeric|min:0',
-            'status' => 'required|in:Not Started,In Progress,Completed,On Hold',
+            'status' => 'required|integer|in:1,2,3,4,5,6',
             'progress' => 'required|integer|min:0|max:100',
 
         ]);
@@ -89,7 +91,7 @@ class ProjectsController extends Controller
             'expected_end_date' => 'required|date|after_or_equal:start_date',
             'actual_end_date' => 'nullable|date|after_or_equal:start_date',
             'estimated_budget' => 'required|numeric|min:0',
-            'status' => 'required|in:Not Started,In Progress,Completed,On Hold',
+            'status' => 'required|integer|in:1,2,3,4,5,6',
             'progress' => 'required|integer|min:0|max:100',
         ]);
 
@@ -105,7 +107,6 @@ class ProjectsController extends Controller
     public function destroy(Projects $projects)
     {
         $projects->delete();
-
         return redirect()->route('projects.index')
                          ->with('success', 'Project deleted successfully.');
     }
