@@ -39,7 +39,19 @@
                                         <td>{{ $project->project_code }}</td>
                                         <td>{{ $project->project_name }}</td>
                                         <td>{{ $project->site_address }}</td>
-                                        <td>{{ $project->progress }}</td>
+                                        <td style="min-width: 150px;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1" style="height: 8px;">
+                                                    <div class="progress-bar bg-success"
+                                                        role="progressbar"
+                                                        style="width: {{ $project->progress }}%;"
+                                                        aria-valuenow="{{ $project->progress }}"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td>{{ $project->start_date }}</td>
                                         <td>
                                             <div class="dropdown">
@@ -53,15 +65,15 @@
                                                     </a>
                                                     @endcan
                                                     @can('projects-edit')
-                                                    <a href="{{ route('projects.edit', $project->id) }}" class="dropdown-item">
+                                                    <a href="{{ route('projects.edit', $project) }}" class="dropdown-item">
                                                         <i class="ti-pencil-alt mr-2"></i> Edit
                                                     </a>
                                                     @endcan
                                                     @can('projects-delete')
-                                                    <form action="{{ route('projects.destroy', $project->id) }}" method="POST" style="display:inline;">
+                                                    <form action="{{ route('projects.destroy', $project) }}" method="POST" style="display:inline;">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="dropdown-item text-danger onSubmit="return confirm('Are you sure you want to delete ' + '{{ $project->projects_name }}?')">
+                                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to delete {{ $project->project_name }}?')">
                                                             <i class="ti-trash mr-2"></i> Delete
                                                         </button>
                                                     </form>
@@ -73,7 +85,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-                        {{ $projects->links() }}
                     </div>
                     <div class="mt-3 d-flex justify-content-center">
                         {{ $projects->withQueryString()->links() }}

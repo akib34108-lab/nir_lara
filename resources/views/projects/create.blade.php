@@ -28,7 +28,7 @@
                                     <select name="client_id" class="form-control" required>
                                         <option value="">Select Client</option>
                                         @foreach($clients as $client)
-                                            <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{$client->client_id}} - {{ $client->name }}</option>
+                                            <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
                                         @endforeach
                                     </select>
                                     @error('client_id')
@@ -125,7 +125,7 @@
                                 </div>
                                 <div class="col-sm-4">
                                     <label class="col-form-label">Estimated Budget</label>
-                                    <input type="number" name="estimated_budget"
+                                    <input type="number" name="estimated_budget" step="0.01" min="0"
                                         class="form-control"
                                         value="{{ old('estimated_budget') }}"
                                         placeholder="Enter Estimated Budget">
@@ -150,7 +150,7 @@
                             </div>
                             <div class="form-group row">
                                 <div class="col-sm-12">
-                                    <label class="col-form-label">Progress</label>
+                                    <label class="col-form-label">Progress(%)</label>
                                     <input type="number" name="progress"
                                         class="form-control"
                                         value="{{ old('progrss', '00') }}"

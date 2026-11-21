@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
 {
-    use softDeletes;
+    use SoftDeletes;
+    public function projects()
+    {
+        return $this->hasMany(Projects::class, 'client_id');
+    }
     protected $fillable = [
     'client_code',
     'client_type',

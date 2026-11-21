@@ -8,6 +8,7 @@ use App\Http\Controllers\UserListController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProjectsController;
+use App\Http\Controllers\ProjectProgressController;
 
 Auth::routes();
 
@@ -52,4 +53,8 @@ Route::middleware(['auth'])->group(function () {
     ->middlewareFor('show', 'permission:projects-view')
     ->middlewareFor(['edit', 'update'], 'permission:projects-edit')
     ->middlewareFor('destroy', 'permission:projects-delete');
+
+    Route::post('/projects/{project}/progress', [ProjectProgressController::class, 'store'])
+    ->name('projects.progress.store')
+    ->middleware('permission:projects-edit');
 });

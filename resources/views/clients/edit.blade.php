@@ -18,7 +18,7 @@
                                     <label class="col-form-label">Client Code</label>
                                     <input type="text" name="client_code"
                                         class="form-control"
-                                        value="{{ old('client_code', $client->client_code) }}"
+                                        value="{{ old('client_code', $client->client_code) }}" readonly
                                         placeholder="Enter client code" required>
                                     @error('client_code')
                                         <small class="text-danger">{{ $message }}</small>

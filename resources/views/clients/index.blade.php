@@ -28,7 +28,7 @@
                                     <th>Code</th>
                                     <th>Name</th>
                                     <th>Company</th>
-                                    <th>Email</th>
+                                    <th>Projects</th>
                                     <th>Phone</th>
                                     <th></th>
                                 </tr>
@@ -39,7 +39,7 @@
                                         <td>{{ $client->client_code }}</td>
                                         <td>{{ $client->name }}</td>
                                         <td>{{ $client->company_name }}</td>
-                                        <td>{{ $client->email }}</td>
+                                        <td>{{ $client->projects_count}}</td>
                                         <td>{{ $client->phone }}</td>
                                         <td>
                                             <div class="dropdown">
@@ -70,7 +70,7 @@
                                                             @csrf
                                                             @method('DELETE')
                                                             <button type="submit"
-                                                                class="dropdown-item text-danger
+                                                                class="dropdown-item text-danger"
                                                                     onclick="return confirm('Are you sure you want to delete ' + '{{ $client->name }}?')">
                                                                 <i class="ti-trash mr-2"></i> Delete
                                                             </button>

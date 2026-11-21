@@ -61,28 +61,33 @@ class ProjectsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Projects $projects)
+    public function show(Projects $project)
     {
-        return view('projects.show', compact('projects'));
+        $client = Client::find($project->client_id);
+        $projectManager = User::find($project->project_manager_id);
+        $progressHistory = $project->progressHistory()->with('creator')->latest('progress_date')->get();
+        return view('projects.show', compact('project', 'client', 'projectManager', 'progressHistory'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Projects $projects)
+    public function edit(Projects $project)
     {
-        return view('projects.edit', compact('projects'));
+        $clients = Client::latest()->get();
+        $projectManagers = User::role('Project Manager')->get();
+        return view('projects.edit', compact('project', 'clients', 'projectManagers'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Projects $projects)
+    public function update(Request $request, Projects $project)
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
             'project_manager_id' => 'required|exists:users,id',
-            'project_code' => 'required|string|max:255|unique:projects,project_code,' . $projects->id,
+            'project_code' => 'required|string|max:255|unique:projects,project_code,' . $project->id,
             'project_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'site_address' => 'required|string|max:255',
@@ -95,7 +100,7 @@ class ProjectsController extends Controller
             'progress' => 'required|integer|min:0|max:100',
         ]);
 
-        $projects->update($request->all());
+        $project->update($request->all());
 
         return redirect()->route('projects.index')
                          ->with('success', 'Project updated successfully.');
@@ -104,10 +109,9 @@ class ProjectsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Projects $projects)
+    public function destroy(Projects $project)
     {
-        $projects->delete();
-        return redirect()->route('projects.index')
-                         ->with('success', 'Project deleted successfully.');
+        $project->delete();
+        return redirect()->route('projects.index')->with('success', 'Project deleted successfully.');
     }
 }

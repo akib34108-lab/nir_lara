@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Projects extends Model
 {
-    use softDeletes;
+    use SoftDeletes;
+    public function progressHistory()
+    {
+        return $this->hasMany(ProjectProgress::class, 'project_id');
+    }
     protected $fillable = [
     'project_code',
     'client_id',
