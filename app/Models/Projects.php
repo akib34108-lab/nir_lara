@@ -9,9 +9,13 @@ class Projects extends Model
 {
     use SoftDeletes;
     public function progressHistory()
-    {
-        return $this->hasMany(ProjectProgress::class, 'project_id');
-    }
+        {
+            return $this->hasMany(ProjectProgress::class, 'project_id');
+        }
+    public function milestones()
+        {
+            return $this->hasMany(ProjectMilestone::class, 'project_id');
+        }
     protected $fillable = [
     'project_code',
     'client_id',

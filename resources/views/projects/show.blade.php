@@ -8,18 +8,6 @@
                 <span class="badge badge-primary mr-2">
                     {{ $project->project_code }}
                 </span>
-                @can('projects-edit')
-                    <button type="button"
-                            class="btn btn-sm btn-outline-primary"
-                            id="updateProgressPopover"
-                            data-toggle="popover"
-                            data-placement="bottom"
-                            data-trigger="click"
-                            data-html="true"
-                            title="Update Project Progress">
-                        <i class="ti-stats-up"></i> Update Progress
-                    </button>
-                @endcan
             </div>
             <p class="text-muted mt-2 mb-0">
                 Project Overview & Details
@@ -227,59 +215,12 @@
             </ul>
         </div>
     @endif
-
-    @can('projects-edit')
-        <div id="progressPopoverContent" style="display: none;">
-            <form action="{{ route('projects.progress.store', $project->id) }}" method="POST">
-                @csrf
-                <div class="form-group mb-2">
-                    <label for="progress_date">Progress Date</label>
-                    <input type="date" name="progress_date" id="progress_date"
-                           class="form-control form-control-sm @error('progress_date') is-invalid @enderror"
-                           value="{{ old('progress_date', now()->format('Y-m-d')) }}" required>
-                    @error('progress_date')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group mb-2">
-                    <label for="progress_percentage">Progress Percentage (%)</label>
-                    <input type="number" name="progress_percentage" id="progress_percentage"
-                           class="form-control form-control-sm @error('progress_percentage') is-invalid @enderror"
-                           min="0" max="100" step="1"
-                           value="{{ old('progress_percentage', $project->progress) }}" required>
-                    @error('progress_percentage')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                    <small class="form-text text-muted">
-                        Enter the latest overall completion percentage.
-                    </small>
-                </div>
-
-                <div class="form-group mb-3">
-                    <label for="remarks">Remarks</label>
-                    <textarea name="remarks" id="remarks"
-                              class="form-control form-control-sm @error('remarks') is-invalid @enderror"
-                              rows="3" placeholder="Describe the work completed">{{ old('remarks') }}</textarea>
-                    @error('remarks')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-sm btn-block">
-                    <i class="ti-save"></i> Save Progress
-                </button>
-            </form>
-        </div>
-    @endcan
-
     <div class="row">
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
                     <h4 class="card-title">Progress History</h4>
                     <p class="card-description">Previous progress updates for this project.</p>
-
                     @forelse($progressHistory as $progress)
                         <div class="border-bottom pb-3 mb-3">
                             <div class="d-flex justify-content-between align-items-center flex-wrap">
@@ -302,7 +243,6 @@
             </div>
         </div>
     </div>
-
     <div class="row">
         <div class="col-12 grid-margin stretch-card">
             <div class="card">
@@ -403,34 +343,4 @@
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script>
-    $(function () {
-        $('#updateProgressPopover').popover({
-            container: 'body',
-            html: true,
-            sanitize: false,
-            trigger: 'click',
-            placement: 'bottom',
-            content: function () {
-                return $('#progressPopoverContent').html();
-            }
-        });
-
-        // Close when clicking outside the button and popover.
-        $(document).on('click', function (event) {
-            if (!$(event.target).closest('#updateProgressPopover, .popover').length) {
-                $('#updateProgressPopover').popover('hide');
-            }
-        });
-
-        // Reopen after validation errors so the user can correct the values.
-        @if($errors->has('progress_date') || $errors->has('progress_percentage') || $errors->has('remarks'))
-            $('#updateProgressPopover').popover('show');
-        @endif
-    });
-</script>
-@endpush
-
 @endsection

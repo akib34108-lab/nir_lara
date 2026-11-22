@@ -153,7 +153,7 @@
                                     <label class="col-form-label">Progress(%)</label>
                                     <input type="number" name="progress"
                                         class="form-control"
-                                        value="{{ old('progrss', '00') }}"
+                                        value="{{ old('progress', '0') }}"
                                         placeholder="Enter Progress">
                                     @error('progress')
                                         <small class="text-danger">{{ $message }}</small>
@@ -161,12 +161,11 @@
                                 </div>
                             </div>
                             <hr/>
-                            <button type="submit" class="btn btn-primary mr-2">
-                                <i class="ti-save"></i> Save Project
-                            </button>
-                            <a href="{{ route('projects.index') }}" class="btn btn-light">
-                                <i class="ti-arrow-left"></i> Cancel
-                            </a>
+                            <div class="d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary mr-2">
+                                    Next <i class="ti-arrow-right"></i>
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>

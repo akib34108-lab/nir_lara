@@ -9,6 +9,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\ProjectsController;
 use App\Http\Controllers\ProjectProgressController;
+use App\Http\Controllers\ProjectMilestoneController;
 
 Auth::routes();
 
@@ -23,7 +24,6 @@ Route::middleware(['auth'])->group(function () {
         return view('welcome');
     })->name('welcome');
 
-    // Clients
     Route::resource('clients', ClientController::class)
     ->middlewareFor('index', 'permission:clients-list')
     ->middlewareFor(['create', 'store'], 'permission:clients-create')
@@ -57,4 +57,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/projects/{project}/progress', [ProjectProgressController::class, 'store'])
     ->name('projects.progress.store')
     ->middleware('permission:projects-edit');
+
+    Route::resource('projects.milestones', ProjectMilestoneController::class)
+    ->except(['index', 'show'])
+    ->middlewareFor('create', 'permission:milestones-create')
+    ->middlewareFor('store', 'permission:milestones-create')
+    ->middlewareFor('edit', 'permission:milestones-edit')
+    ->middlewareFor('update', 'permission:milestones-edit')
+    ->middlewareFor('destroy', 'permission:milestones-delete');
 });

@@ -15,9 +15,7 @@ class ProjectProgressController extends Controller
             'progress_percentage' => 'required|integer|min:0|max:100',
             'remarks' => 'nullable|string',
         ]);
-
         DB::transaction(function () use ($validated, $project) {
-
             ProjectProgress::create([
                 'project_id' => $project->id,
                 'progress_date' => $validated['progress_date'],
@@ -25,14 +23,12 @@ class ProjectProgressController extends Controller
                 'remarks' => $validated['remarks'] ?? null,
                 'created_by' => auth()->id(),
             ]);
-
             $project->update([
                 'progress' => $validated['progress_percentage'],
             ]);
         });
-
         return redirect()
-            ->route('projects.show', $project->id)
+            ->back()
             ->with('success', 'Project progress updated successfully.');
     }
 }

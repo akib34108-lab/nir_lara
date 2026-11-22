@@ -52,9 +52,9 @@ class ProjectsController extends Controller
 
         ]);
 
-        Projects::create($request->all());
+        $project = Projects::create($request->all());
 
-        return redirect()->route('projects.index')
+        return redirect()->route('projects.milestones.create', $project->id)
                          ->with('success', 'Project created successfully.');
     }
 
