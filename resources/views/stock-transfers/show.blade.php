@@ -1,0 +1,12 @@
+@extends('layouts.master')
+@section('content')
+<div class="content-wrapper"><div class="row"><div class="col-lg-12 grid-margin stretch-card"><div class="card"><div class="card-body">
+@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
+<h4 class="card-title">{{ $stock_transfer->transfer_number }}</h4><hr>
+<dl class="row"><dt class="col-sm-3">Source</dt><dd class="col-sm-9">{{ $stock_transfer->sourceWarehouse->name }}</dd><dt class="col-sm-3">Destination</dt><dd class="col-sm-9">{{ $stock_transfer->destinationWarehouse->name }}</dd><dt class="col-sm-3">Responsible User</dt><dd class="col-sm-9">{{ $stock_transfer->responsibleUser->name }}</dd><dt class="col-sm-3">Transfer Date</dt><dd class="col-sm-9">{{ $stock_transfer->transfer_date->format('Y-m-d') }}</dd><dt class="col-sm-3">Status</dt><dd class="col-sm-9"><span class="badge badge-secondary">{{ $stock_transfer->status }}</span></dd><dt class="col-sm-3">Received By</dt><dd class="col-sm-9">{{ $stock_transfer->receiver?->name ?: '-' }}</dd><dt class="col-sm-3">Notes</dt><dd class="col-sm-9">{{ $stock_transfer->notes ?: '-' }}</dd></dl>
+<div class="table-responsive"><table class="table table-bordered"><thead><tr><th>Material</th><th>Transferred</th><th>Received</th></tr></thead><tbody>@foreach($stock_transfer->items as $item)<tr><td>{{ $item->material->material_code }} - {{ $item->material->name }}</td><td>{{ number_format($item->quantity,3) }}</td><td>{{ number_format($item->received_quantity,3) }}</td></tr>@endforeach</tbody></table></div>
+@if($stock_transfer->status==='Pending')@can('stock-transfer-approve')<form method="POST" action="{{ route('stock-transfers.dispatch',$stock_transfer) }}" onsubmit="return confirm('Dispatch and reduce source stock?')">@csrf<button class="btn btn-primary">Dispatch Transfer</button></form>@endcan<form method="POST" action="{{ route('stock-transfers.cancel',$stock_transfer) }}" class="mt-2">@csrf<button class="btn btn-danger">Cancel</button></form>@endif
+@if($stock_transfer->status==='In Transit')@can('stock-transfer-receive')<form method="POST" action="{{ route('stock-transfers.receive',$stock_transfer) }}" onsubmit="return confirm('Receive and increase destination stock?')">@csrf<button class="btn btn-success">Receive Transfer</button></form>@endcan@endif
+<a href="{{ route('stock-transfers.index') }}" class="btn btn-light mt-3">Back</a>
+</div></div></div></div></div>
+@endsection

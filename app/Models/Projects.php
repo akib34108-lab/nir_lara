@@ -8,27 +8,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Projects extends Model
 {
     use SoftDeletes;
+
     public function progressHistory()
-        {
-            return $this->hasMany(ProjectProgress::class, 'project_id');
-        }
+    {
+        return $this->hasMany(ProjectProgress::class, 'project_id');
+    }
+
     public function milestones()
-        {
-            return $this->hasMany(ProjectMilestone::class, 'project_id');
-        }
+    {
+        return $this->hasMany(ProjectMilestone::class, 'project_id');
+    }
+
+    public function purchaseRequests()
+    {
+        return $this->hasMany(PurchaseRequest::class, 'project_id');
+    }
+
     protected $fillable = [
-    'project_code',
-    'client_id',
-    'project_name',
-    'description',
-    'project_manager_id',
-    'start_date',
-    'expected_end_date',
-    'actual_end_date',
-    'estimated_budget',
-    'progress',
-    'status',
-    'site_address',
-    'city',
-];
+        'project_code',
+        'client_id',
+        'project_name',
+        'description',
+        'project_manager_id',
+        'start_date',
+        'expected_end_date',
+        'actual_end_date',
+        'estimated_budget',
+        'progress',
+        'status',
+        'site_address',
+        'city',
+    ];
 }

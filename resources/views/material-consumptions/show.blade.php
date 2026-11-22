@@ -1,0 +1,8 @@
+@extends('layouts.master')
+@section('content')
+<div class="content-wrapper"><div class="row"><div class="col-lg-12 grid-margin stretch-card"><div class="card"><div class="card-body">
+<h4 class="card-title">Material Consumption Details</h4><hr>
+<dl class="row"><dt class="col-sm-3">Project</dt><dd class="col-sm-9">{{ $material_consumption->project->project_name }}</dd><dt class="col-sm-3">Site</dt><dd class="col-sm-9">{{ $material_consumption->site ?: '-' }}</dd><dt class="col-sm-3">Material</dt><dd class="col-sm-9">{{ $material_consumption->material->material_code }} - {{ $material_consumption->material->name }}</dd><dt class="col-sm-3">Linked Issue</dt><dd class="col-sm-9">{{ $material_consumption->issue?->issue_number ?: '-' }}</dd><dt class="col-sm-3">Issued Quantity</dt><dd class="col-sm-9">{{ number_format($material_consumption->issued_quantity,3) }}</dd><dt class="col-sm-3">Estimated Quantity</dt><dd class="col-sm-9">{{ number_format($material_consumption->estimated_quantity,3) }}</dd><dt class="col-sm-3">Consumed Quantity</dt><dd class="col-sm-9">{{ number_format($material_consumption->consumed_quantity,3) }}</dd><dt class="col-sm-3">Wasted Quantity</dt><dd class="col-sm-9">{{ number_format($material_consumption->wasted_quantity,3) }}</dd><dt class="col-sm-3">Remaining Quantity</dt><dd class="col-sm-9">{{ number_format($material_consumption->remaining_quantity,3) }}</dd><dt class="col-sm-3">Date</dt><dd class="col-sm-9">{{ $material_consumption->consumption_date->format('Y-m-d') }}</dd><dt class="col-sm-3">Notes</dt><dd class="col-sm-9">{{ $material_consumption->notes ?: '-' }}</dd></dl>
+<a href="{{ route('material-consumptions.index') }}" class="btn btn-light">Back</a>
+</div></div></div></div></div>
+@endsection

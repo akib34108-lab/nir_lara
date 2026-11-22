@@ -1,0 +1,12 @@
+@extends('layouts.master')
+@section('content')
+<div class="content-wrapper"><div class="row"><div class="col-lg-12 grid-margin stretch-card"><div class="card"><div class="card-body">
+@if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+@if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
+<div class="d-flex justify-content-between align-items-center mb-3"><h4 class="card-title mb-0">Stock Adjustments</h4>@can('stock-adjustment-create')<a href="{{ route('stock-adjustments.create') }}" class="btn btn-primary"><i class="ti-plus"></i> New Adjustment</a>@endcan</div>
+<form method="GET" class="form-row mb-3"><div class="col-md-4 mb-2"><select name="warehouse" class="form-control"><option value="">All Warehouses</option>@foreach($warehouses as $warehouse)<option value="{{ $warehouse->id }}" {{ request('warehouse')==$warehouse->id?'selected':'' }}>{{ $warehouse->name }}</option>@endforeach</select></div><div class="col-md-3 mb-2"><select name="status" class="form-control"><option value="">All Statuses</option>@foreach(['Pending','Approved','Rejected','Cancelled'] as $status)<option value="{{ $status }}" {{ request('status')==$status?'selected':'' }}>{{ $status }}</option>@endforeach</select></div><div class="col-md-5 mb-2"><button class="btn btn-outline-primary mr-2">Filter</button><a href="{{ route('stock-adjustments.index') }}" class="btn btn-light">Reset</a></div></form>
+<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Adjustment</th><th>Warehouse</th><th>Material</th><th>Previous</th><th>Adjusted</th><th>Difference</th><th>Status</th><th></th></tr></thead><tbody>
+@forelse($adjustments as $adjustment)<tr><td>{{ $adjustment->adjustment_number }}</td><td>{{ $adjustment->warehouse->name }}</td><td>{{ $adjustment->material->name }}</td><td>{{ number_format($adjustment->previous_quantity,3) }}</td><td>{{ number_format($adjustment->adjusted_quantity,3) }}</td><td>{{ number_format($adjustment->difference,3) }}</td><td><span class="badge badge-secondary">{{ $adjustment->status }}</span></td><td><a href="{{ route('stock-adjustments.show',$adjustment) }}" class="btn btn-light btn-sm"><i class="ti-eye"></i></a></td></tr>@empty<tr><td colspan="8" class="text-center">No stock adjustments found.</td></tr>@endforelse
+</tbody></table></div><div class="mt-3 d-flex justify-content-center">{{ $adjustments->withQueryString()->links() }}</div>
+</div></div></div></div></div>
+@endsection

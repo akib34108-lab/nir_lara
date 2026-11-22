@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 use App\Models\User;
+use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RolePermissionSeeder extends Seeder
 {
@@ -48,13 +48,41 @@ class RolePermissionSeeder extends Seeder
 
             'materials' => ['list', 'create', 'view', 'edit', 'delete'],
 
+            'category' => ['list', 'create', 'edit', 'delete'],
+
+            'supplier' => ['list', 'create', 'edit', 'delete'],
+
+            'purchase-request' => ['list', 'create', 'edit', 'delete', 'approve', 'reject'],
+
+            'purchase-order' => ['list', 'create', 'edit', 'delete', 'approve'],
+
+            'grn' => ['list', 'create', 'edit', 'delete', 'confirm'],
+
+            'inspection' => ['list', 'create', 'edit', 'approve'],
+
+            'inventory' => ['list', 'view'],
+
+            'material-issue' => ['list', 'create', 'approve'],
+
+            'material-return' => ['list', 'create', 'approve'],
+
+            'stock-transfer' => ['list', 'create', 'approve', 'receive'],
+
+            'consumption' => ['list', 'create', 'edit'],
+
+            'stock-adjustment' => ['list', 'create', 'approve'],
+
+            'material-report' => ['view', 'export'],
+
             'clients' => ['list', 'create', 'view', 'edit', 'delete'],
 
             'roles' => ['list', 'create', 'edit', 'delete'],
-            
+
             'permissions' => ['list', 'create', 'edit', 'delete'],
-            
+
             'activity-log' => ['list'],
+
+            'milestones' => ['create', 'edit', 'delete'],
         ];
 
         foreach ($modules as $module => $actions) {
@@ -62,7 +90,7 @@ class RolePermissionSeeder extends Seeder
             foreach ($actions as $action) {
 
                 Permission::firstOrCreate([
-                    'name' => $module . '-' . $action,
+                    'name' => $module.'-'.$action,
                     'guard_name' => 'web',
                 ]);
 
@@ -86,8 +114,43 @@ class RolePermissionSeeder extends Seeder
                 'projects-edit',
                 'materials-list',
                 'materials-view',
+                'category-list',
+                'supplier-list',
+                'purchase-request-list',
+                'purchase-request-create',
+                'purchase-request-edit',
+                'purchase-request-approve',
+                'purchase-request-reject',
+                'purchase-order-list',
+                'purchase-order-create',
+                'purchase-order-edit',
+                'purchase-order-approve',
+                'grn-list',
+                'grn-create',
+                'grn-confirm',
+                'inspection-list',
+                'inspection-create',
+                'inventory-list',
+                'material-issue-list',
+                'material-issue-create',
+                'material-issue-approve',
+                'material-return-list',
+                'material-return-create',
+                'material-return-approve',
+                'stock-transfer-list',
+                'stock-transfer-create',
+                'stock-transfer-approve',
+                'stock-transfer-receive',
+                'consumption-list',
+                'consumption-create',
+                'stock-adjustment-list',
+                'stock-adjustment-create',
+                'stock-adjustment-approve',
+                'material-report-view',
                 'clients-list',
                 'clients-view',
+                'milestones-create',
+                'milestones-edit',
             ],
 
             'HR Manager' => [
@@ -124,7 +187,7 @@ class RolePermissionSeeder extends Seeder
         }
         $user = User::first();
 
-        if ($user && !$user->hasRole('Super Admin')) {
+        if ($user && ! $user->hasRole('Super Admin')) {
             $user->assignRole('Super Admin');
         }
 

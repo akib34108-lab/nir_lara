@@ -1,0 +1,10 @@
+@extends('layouts.master')
+@section('content')
+<div class="content-wrapper"><div class="row"><div class="col-lg-12 grid-margin stretch-card"><div class="card"><div class="card-body">
+@php $available=(float)$inventory->quantity-(float)$inventory->reserved_quantity; @endphp
+<h4 class="card-title">Inventory Details</h4><hr>
+<dl class="row"><dt class="col-sm-3">Material</dt><dd class="col-sm-9">{{ $inventory->material->material_code }} - {{ $inventory->material->name }}</dd><dt class="col-sm-3">Category</dt><dd class="col-sm-9">{{ $inventory->material->category->name }}</dd><dt class="col-sm-3">Warehouse</dt><dd class="col-sm-9">{{ $inventory->warehouse->name }}</dd><dt class="col-sm-3">Available Quantity</dt><dd class="col-sm-9">{{ number_format($available,3) }} {{ $inventory->material->unit }}</dd><dt class="col-sm-3">Reserved Quantity</dt><dd class="col-sm-9">{{ number_format($inventory->reserved_quantity,3) }}</dd><dt class="col-sm-3">Minimum Stock</dt><dd class="col-sm-9">{{ number_format($inventory->material->minimum_stock_level,3) }}</dd><dt class="col-sm-3">Average Cost</dt><dd class="col-sm-9">{{ number_format($inventory->average_cost,2) }}</dd><dt class="col-sm-3">Stock Value</dt><dd class="col-sm-9">{{ number_format($available*(float)$inventory->average_cost,2) }}</dd></dl>
+<h5>Movement History</h5><div class="table-responsive"><table class="table table-hover"><thead><tr><th>Date</th><th>Type</th><th>Quantity</th><th>Balance</th><th>User</th><th>Notes</th></tr></thead><tbody>@forelse($transactions as $transaction)<tr><td>{{ $transaction->created_at->format('Y-m-d H:i') }}</td><td>{{ $transaction->transaction_type }}</td><td>{{ number_format($transaction->quantity,3) }}</td><td>{{ number_format($transaction->balance_quantity,3) }}</td><td>{{ $transaction->creator->name }}</td><td>{{ $transaction->notes ?: '-' }}</td></tr>@empty<tr><td colspan="6" class="text-center">No movements found.</td></tr>@endforelse</tbody></table></div><div class="mt-3 d-flex justify-content-center">{{ $transactions->links() }}</div>
+<a href="{{ route('inventory.index') }}" class="btn btn-light">Back</a>
+</div></div></div></div></div>
+@endsection

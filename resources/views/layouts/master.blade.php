@@ -98,6 +98,7 @@
               <img src="{{asset('assets/images/faces/face28.jpg')}}" alt="profile"/>
             </a>
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
+              @auth
               <a class="dropdown-item">
                 <i class="ti-id-badge text-primary"></i>
                 {{ Auth::user()->getRoleNames()->first() }}
@@ -113,6 +114,12 @@
                       Logout
                   </button>
               </form>
+              @else
+              <a class="dropdown-item" href="{{ route('login') }}">
+                <i class="ti-user text-primary"></i>
+                Login
+              </a>
+              @endauth
             </div>
           </li>
           <li class="nav-item nav-settings d-none d-lg-flex">
@@ -333,6 +340,61 @@
             </div>
           </li>
           @endcan
+          @canany(['materials-list', 'category-list', 'supplier-list', 'purchase-request-list', 'purchase-order-list', 'grn-list', 'inspection-list', 'inventory-list', 'material-issue-list', 'material-return-list', 'stock-transfer-list', 'consumption-list', 'stock-adjustment-list', 'material-report-view'])
+          <li class="nav-item">
+            <a class="nav-link" data-toggle="collapse" href="#material-menu" aria-expanded="false" aria-controls="material-menu">
+              <i class="icon-box menu-icon"></i>
+              <span class="menu-title">Material</span>
+              <i class="menu-arrow"></i>
+            </a>
+            <div class="collapse" id="material-menu">
+              <ul class="nav flex-column sub-menu">
+                @can('materials-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}">Material List</a></li>
+                @endcan
+                @can('category-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-categories.*') ? 'active' : '' }}" href="{{ route('material-categories.index') }}">Categories</a></li>
+                @endcan
+                @can('supplier-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">Suppliers</a></li>
+                @endcan
+                @can('purchase-request-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('purchase-requests.*') ? 'active' : '' }}" href="{{ route('purchase-requests.index') }}">Purchase Requests</a></li>
+                @endcan
+                @can('purchase-order-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}" href="{{ route('purchase-orders.index') }}">Purchase Orders</a></li>
+                @endcan
+                @can('grn-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('grns.*') ? 'active' : '' }}" href="{{ route('grns.index') }}">Material Receiving (GRN)</a></li>
+                @endcan
+                @can('inspection-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('inspections.*') ? 'active' : '' }}" href="{{ route('inspections.index') }}">Material Inspection</a></li>
+                @endcan
+                @can('inventory-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}" href="{{ route('inventory.index') }}">Material Inventory</a></li>
+                @endcan
+                @can('material-issue-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-issues.*') ? 'active' : '' }}" href="{{ route('material-issues.index') }}">Material Issue</a></li>
+                @endcan
+                @can('material-return-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-returns.*') ? 'active' : '' }}" href="{{ route('material-returns.index') }}">Material Returns</a></li>
+                @endcan
+                @can('stock-transfer-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('stock-transfers.*') ? 'active' : '' }}" href="{{ route('stock-transfers.index') }}">Stock Transfer</a></li>
+                @endcan
+                @can('consumption-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-consumptions.*') ? 'active' : '' }}" href="{{ route('material-consumptions.index') }}">Material Consumption</a></li>
+                @endcan
+                @can('stock-adjustment-list')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('stock-adjustments.*') ? 'active' : '' }}" href="{{ route('stock-adjustments.index') }}">Stock Adjustment</a></li>
+                @endcan
+                @can('material-report-view')
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-reports.*') ? 'active' : '' }}" href="{{ route('material-reports.index') }}">Material Reports</a></li>
+                @endcan
+              </ul>
+            </div>
+          </li>
+          @endcanany
         </ul>
       </nav>
     <!-- partial -->

@@ -10,6 +10,8 @@ class ProjectMilestone extends Model
         'project_id',
         'milestone_name',
         'percentage',
+        'status',
+        'completed_date',
         'created_by',
     ];
     public function project()

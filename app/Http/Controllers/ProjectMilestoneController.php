@@ -6,6 +6,7 @@ use App\Models\ProjectMilestone;
 use App\Models\Projects;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\ProjectProgress;
 
 class ProjectMilestoneController extends Controller
 {
@@ -89,14 +90,45 @@ class ProjectMilestoneController extends Controller
     {
         $project = Projects::findOrFail($projectId);
         $milestone = ProjectMilestone::where('project_id', $project->id)->findOrFail($milestoneId);
+
+        if ($request->has('status') && !$request->has('milestone_name')) {
+            $request->validate([
+                'status' => ['required', 'in:pending,completed'],
+            ]);
+
+            $milestone->update([
+                'status' => $request->status,
+                'completed_date' => $request->status === 'completed' ? now() : null,
+            ]);
+
+            $progress = $this->recalculateProgress($project);
+
+        ProjectProgress::create([
+            'project_id'          => $project->id,
+            'progress_date'       => now()->toDateString(),
+            'progress_percentage' => $progress,
+            'remarks'             => $request->status === 'completed'
+                                        ? 'Milestone completed: ' . $milestone->milestone_name
+                                        : 'Milestone reopened: ' . $milestone->milestone_name,
+            'created_by'          => auth()->id(),
+        ]);
+
+            return redirect()
+                ->route('projects.index')
+                ->with('success', 'Milestone marked as ' . $request->status . '.');
+        }
+
         $validated = $request->validate([
             'milestone_name' => ['required', 'string', 'max:255'],
             'percentage' => ['required', 'numeric', 'gt:0', 'lte:100']
         ]);
+
         $otherPercentage = $project->milestones()
             ->where('id', '!=', $milestone->id)
             ->sum('percentage');
+
         $newTotal = $otherPercentage + $validated['percentage'];
+
         if (round($newTotal, 2) != 100) {
             return back()
                 ->withInput()
@@ -104,10 +136,26 @@ class ProjectMilestoneController extends Controller
                     'percentage' => 'Total milestone percentage must be 100%. Current total: ' . $newTotal . '%',
                 ]);
         }
+
         $milestone->update($validated);
+
+        $this->recalculateProgress($project);
+
         return redirect()
             ->route('projects.show', $project->id)
             ->with('success', 'Milestone updated successfully.');
+    }
+
+    private function recalculateProgress($project)
+    {
+        $progress = min(
+            $project->milestones()->where('status', 'completed')->sum('percentage'),
+            100
+        );
+
+        $project->update(['progress' => $progress]);
+
+        return $progress;
     }
 
     /**
