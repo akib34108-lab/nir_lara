@@ -92,9 +92,9 @@ Route::middleware(['auth'])->group(function () {
         ->middlewareFor('destroy', 'permission:category-delete');
 
     Route::resource('suppliers', SupplierController::class)
+        ->except(['show'])
         ->middlewareFor('index', 'permission:supplier-list')
         ->middlewareFor(['create', 'store'], 'permission:supplier-create')
-        ->middlewareFor('show', 'permission:supplier-list')
         ->middlewareFor(['edit', 'update'], 'permission:supplier-edit')
         ->middlewareFor('destroy', 'permission:supplier-delete');
 
