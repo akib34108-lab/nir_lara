@@ -9,6 +9,8 @@ use App\Models\StockTransaction;
 use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class GoodsReceivedNoteController extends Controller
 {
@@ -35,19 +37,18 @@ class GoodsReceivedNoteController extends Controller
             ->with(['supplier', 'items.material'])
             ->latest()
             ->get();
-        $warehouses = Warehouse::where('status', 1)->orderBy('name')->get();
         $selectedOrder = $request->filled('purchase_order')
             ? $purchaseOrders->firstWhere('id', (int) $request->purchase_order)
             : null;
 
-        return view('grns.create', compact('purchaseOrders', 'warehouses', 'selectedOrder'));
+        return view('grns.create', compact('purchaseOrders', 'selectedOrder'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'purchase_order_id' => 'required|exists:purchase_orders,id',
-            'warehouse_id' => 'required|exists:warehouses,id',
+            'warehouse_name' => 'required|string|max:255',
             'received_date' => 'required|date',
             'notes' => 'nullable|string',
             'items' => 'required|array|min:1',
@@ -64,11 +65,12 @@ class GoodsReceivedNoteController extends Controller
                 abort(422, 'GRNs can only be created for approved purchase orders.');
             }
 
+            $warehouse = $this->resolveWarehouse($validated['warehouse_name']);
             $nextId = (GoodsReceivedNote::withTrashed()->max('id') ?? 0) + 1;
             $grn = GoodsReceivedNote::create([
                 'grn_number' => 'GRN-'.now()->format('Y').'-'.str_pad($nextId, 5, '0', STR_PAD_LEFT),
                 'purchase_order_id' => $purchaseOrder->id,
-                'warehouse_id' => $validated['warehouse_id'],
+                'warehouse_id' => $warehouse->id,
                 'received_by' => $request->user()->id,
                 'received_date' => $validated['received_date'],
                 'notes' => $validated['notes'] ?? null,
@@ -223,5 +225,37 @@ class GoodsReceivedNoteController extends Controller
         Warehouse::create($validated + ['status' => 1]);
 
         return redirect()->back()->with('success', 'Warehouse/location created successfully.');
+    }
+
+    private function resolveWarehouse(string $name): Warehouse
+    {
+        $name = trim($name);
+        $warehouse = Warehouse::whereRaw('LOWER(name) = ?', [Str::lower($name)])->first();
+
+        if ($warehouse) {
+            if ((int) $warehouse->status !== 1) {
+                throw ValidationException::withMessages([
+                    'warehouse_name' => 'The entered warehouse is inactive.',
+                ]);
+            }
+
+            return $warehouse;
+        }
+
+        $slug = Str::upper(Str::slug($name)) ?: 'LOCATION';
+        $baseCode = 'WH-'.substr($slug, 0, 47);
+        $code = $baseCode;
+        $suffix = 1;
+
+        while (Warehouse::withTrashed()->where('code', $code)->exists()) {
+            $tail = '-'.$suffix++;
+            $code = substr($baseCode, 0, 50 - strlen($tail)).$tail;
+        }
+
+        return Warehouse::create([
+            'code' => $code,
+            'name' => $name,
+            'status' => 1,
+        ]);
     }
 }

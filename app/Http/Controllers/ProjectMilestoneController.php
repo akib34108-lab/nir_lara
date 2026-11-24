@@ -92,30 +92,32 @@ class ProjectMilestoneController extends Controller
         $milestone = ProjectMilestone::where('project_id', $project->id)->findOrFail($milestoneId);
 
         if ($request->has('status') && !$request->has('milestone_name')) {
-            $request->validate([
+            $validated = $request->validate([
                 'status' => ['required', 'in:pending,completed'],
             ]);
 
-            $milestone->update([
-                'status' => $request->status,
-                'completed_date' => $request->status === 'completed' ? now() : null,
-            ]);
+            DB::transaction(function () use ($validated, $milestone, $project) {
+                $milestone->update([
+                    'status' => $validated['status'],
+                    'completed_date' => $validated['status'] === 'completed' ? now() : null,
+                ]);
 
-            $progress = $this->recalculateProgress($project);
+                $progress = $this->recalculateProgress($project);
 
-        ProjectProgress::create([
-            'project_id'          => $project->id,
-            'progress_date'       => now()->toDateString(),
-            'progress_percentage' => $progress,
-            'remarks'             => $request->status === 'completed'
-                                        ? 'Milestone completed: ' . $milestone->milestone_name
-                                        : 'Milestone reopened: ' . $milestone->milestone_name,
-            'created_by'          => auth()->id(),
-        ]);
+                ProjectProgress::create([
+                    'project_id' => $project->id,
+                    'progress_date' => now()->toDateString(),
+                    'progress_percentage' => $progress,
+                    'remarks' => $validated['status'] === 'completed'
+                        ? 'Milestone completed: ' . $milestone->milestone_name
+                        : 'Milestone reopened: ' . $milestone->milestone_name,
+                    'created_by' => auth()->id(),
+                ]);
+            });
 
             return redirect()
                 ->route('projects.index')
-                ->with('success', 'Milestone marked as ' . $request->status . '.');
+                ->with('success', 'Milestone marked as ' . $validated['status'] . '.');
         }
 
         $validated = $request->validate([
@@ -137,9 +139,21 @@ class ProjectMilestoneController extends Controller
                 ]);
         }
 
-        $milestone->update($validated);
+        DB::transaction(function () use ($validated, $milestone, $project) {
+            $previousProgress = (int) $project->progress;
+            $milestone->update($validated);
+            $progress = $this->recalculateProgress($project);
 
-        $this->recalculateProgress($project);
+            if ($previousProgress !== $progress) {
+                ProjectProgress::create([
+                    'project_id' => $project->id,
+                    'progress_date' => now()->toDateString(),
+                    'progress_percentage' => $progress,
+                    'remarks' => 'Progress recalculated after milestone update: ' . $milestone->milestone_name,
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        });
 
         return redirect()
             ->route('projects.show', $project->id)

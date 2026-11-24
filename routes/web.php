@@ -27,13 +27,11 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
-
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard
+    Route::get('/', function () {
+        return view('welcome');})->name('welcome');
     Route::get('/home', [HomeController::class, 'index'])
         ->name('home');
 
@@ -80,16 +78,16 @@ Route::middleware(['auth'])->group(function () {
         ->middlewareFor('destroy', 'permission:milestones-delete');
 
     Route::resource('materials', MaterialController::class)
+        ->except(['show'])
         ->middlewareFor('index', 'permission:materials-list')
         ->middlewareFor(['create', 'store'], 'permission:materials-create')
-        ->middlewareFor('show', 'permission:materials-view')
         ->middlewareFor(['edit', 'update'], 'permission:materials-edit')
         ->middlewareFor('destroy', 'permission:materials-delete');
 
     Route::resource('material-categories', MaterialCategoryController::class)
+        ->except(['show'])
         ->middlewareFor('index', 'permission:category-list')
         ->middlewareFor(['create', 'store'], 'permission:category-create')
-        ->middlewareFor('show', 'permission:category-list')
         ->middlewareFor(['edit', 'update'], 'permission:category-edit')
         ->middlewareFor('destroy', 'permission:category-delete');
 

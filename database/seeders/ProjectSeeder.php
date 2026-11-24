@@ -14,8 +14,7 @@ class ProjectSeeder extends Seeder
     public function run(): void
     {
         DB::table('projects')->insert([
-            
- [
+            [
                 'client_id' => 1,
                 'project_manager_id' => 2,
                 'project_code' => 'PR-0001',

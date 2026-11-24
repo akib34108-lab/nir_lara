@@ -32,6 +32,6 @@ class GRNItem extends Model
 
     public function inspections()
     {
-        return $this->hasMany(MaterialInspection::class);
+        return $this->hasMany(MaterialInspection::class, 'grn_item_id');
     }
 }

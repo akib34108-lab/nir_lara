@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Projects;
 use App\Models\Client;
+use App\Models\ProjectProgress;
+use App\Models\Projects;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectsController extends Controller
 {
@@ -65,7 +67,11 @@ class ProjectsController extends Controller
     {
         $client = Client::find($project->client_id);
         $projectManager = User::find($project->project_manager_id);
-        $progressHistory = $project->progressHistory()->with('creator')->latest('progress_date')->get();
+        $progressHistory = $project->progressHistory()
+            ->with('creator')
+            ->latest('progress_date')
+            ->latest('id')
+            ->get();
         return view('projects.show', compact('project', 'client', 'projectManager', 'progressHistory'));
     }
 
@@ -84,7 +90,7 @@ class ProjectsController extends Controller
      */
     public function update(Request $request, Projects $project)
     {
-        $request->validate([
+        $validated = $request->validate([
             'client_id' => 'required|exists:clients,id',
             'project_manager_id' => 'required|exists:users,id',
             'project_code' => 'required|string|max:255|unique:projects,project_code,' . $project->id,
@@ -100,7 +106,20 @@ class ProjectsController extends Controller
             'progress' => 'required|integer|min:0|max:100',
         ]);
 
-        $project->update($request->all());
+        DB::transaction(function () use ($validated, $project) {
+            $previousProgress = (int) $project->progress;
+            $project->update($validated);
+
+            if ($previousProgress !== (int) $validated['progress']) {
+                ProjectProgress::create([
+                    'project_id' => $project->id,
+                    'progress_date' => now()->toDateString(),
+                    'progress_percentage' => $validated['progress'],
+                    'remarks' => 'Progress updated from project details.',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        });
 
         return redirect()->route('projects.index')
                          ->with('success', 'Project updated successfully.');

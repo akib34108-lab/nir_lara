@@ -46,7 +46,7 @@
         </ul>
         <ul class="navbar-nav navbar-nav-right">
           <li class="nav-item dropdown">
-            <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="#" data-toggle="dropdown">
+            <a class="nav-link count-indicator dropdown-toggle" id="notificationDropdown" href="javascript:void(0)" data-toggle="dropdown">
               <i class="icon-bell mx-0"></i>
               <span class="count"></span>
             </a>
@@ -94,7 +94,7 @@
             </div>
           </li>
           <li class="nav-item nav-profile dropdown">
-            <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" id="profileDropdown">
+            <a class="nav-link dropdown-toggle" href="javascript:void(0)" data-toggle="dropdown" id="profileDropdown">
               <img src="{{asset('assets/images/faces/face28.jpg')}}" alt="profile"/>
             </a>
             <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="profileDropdown">
@@ -123,7 +123,7 @@
             </div>
           </li>
           <li class="nav-item nav-settings d-none d-lg-flex">
-            <a class="nav-link" href="#">
+            <a class="nav-link" href="javascript:void(0)">
               <i class="icon-ellipsis"></i>
             </a>
           </li>
@@ -155,153 +155,26 @@
         </div>
       </div>
       <div id="right-sidebar" class="settings-panel">
-        <i class="settings-close ti-close"></i>
-        <ul class="nav nav-tabs border-top" id="setting-panel" role="tablist">
-          <li class="nav-item">
-            <a class="nav-link active" id="todo-tab" data-toggle="tab" href="#todo-section" role="tab" aria-controls="todo-section" aria-expanded="true">TO DO LIST</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" id="chats-tab" data-toggle="tab" href="#chats-section" role="tab" aria-controls="chats-section">CHATS</a>
-          </li>
-        </ul>
-        <div class="tab-content" id="setting-content">
-          <div class="tab-pane fade show active scroll-wrapper" id="todo-section" role="tabpanel" aria-labelledby="todo-section">
-            <div class="add-items d-flex px-3 mb-0">
-              <form class="form w-100">
-                <div class="form-group d-flex">
-                  <input type="text" class="form-control todo-list-input" placeholder="Add To-do">
-                  <button type="submit" class="add btn btn-primary todo-list-add-btn" id="add-task">Add</button>
-                </div>
-              </form>
+        <div class="tab-content" id="setting-content" style="border: 1px solid rgba(75, 73, 172, 0.25);">
+            <div class="tab-pane fade show active scroll-wrapper material-category-grid"
+                id="todo-section"
+                role="tabpanel"
+                aria-labelledby="todo-section">
+                @can('category-list')
+                    <a class="material-category-link"
+                      href="{{ route('material-categories.index') }}"
+                      data-tooltip="Material Category">
+                        <i class="ti-layers"></i>
+                    </a>
+                @endcan
+                @can('supplier-list')
+                    <a class="material-category-link"
+                      href="{{ route('suppliers.index') }}"
+                      data-tooltip="Suppliers List">
+                        <i class="ti-truck"></i>
+                    </a>
+                @endcan
             </div>
-            <div class="list-wrapper px-3">
-              <ul class="d-flex flex-column-reverse todo-list">
-                <li>
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="checkbox" type="checkbox">
-                      Team review meeting at 3.00 PM
-                    </label>
-                  </div>
-                  <i class="remove ti-close"></i>
-                </li>
-                <li>
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="checkbox" type="checkbox">
-                      Prepare for presentation
-                    </label>
-                  </div>
-                  <i class="remove ti-close"></i>
-                </li>
-                <li>
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="checkbox" type="checkbox">
-                      Resolve all the low priority tickets due today
-                    </label>
-                  </div>
-                  <i class="remove ti-close"></i>
-                </li>
-                <li class="completed">
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="checkbox" type="checkbox" checked>
-                      Schedule meeting for next week
-                    </label>
-                  </div>
-                  <i class="remove ti-close"></i>
-                </li>
-                <li class="completed">
-                  <div class="form-check">
-                    <label class="form-check-label">
-                      <input class="checkbox" type="checkbox" checked>
-                      Project review
-                    </label>
-                  </div>
-                  <i class="remove ti-close"></i>
-                </li>
-              </ul>
-            </div>
-            <h4 class="px-3 text-muted mt-5 font-weight-light mb-0">Events</h4>
-            <div class="events pt-4 px-3">
-              <div class="wrapper d-flex mb-2">
-                <i class="ti-control-record text-primary mr-2"></i>
-                <span>Feb 11 2018</span>
-              </div>
-              <p class="mb-0 font-weight-thin text-gray">Creating component page build a js</p>
-              <p class="text-gray mb-0">The total number of sessions</p>
-            </div>
-            <div class="events pt-4 px-3">
-              <div class="wrapper d-flex mb-2">
-                <i class="ti-control-record text-primary mr-2"></i>
-                <span>Feb 7 2018</span>
-              </div>
-              <p class="mb-0 font-weight-thin text-gray">Meeting with Alisa</p>
-              <p class="text-gray mb-0 ">Call Sarah Graves</p>
-            </div>
-          </div>
-          <!-- To do section tab ends -->
-          <div class="tab-pane fade" id="chats-section" role="tabpanel" aria-labelledby="chats-section">
-            <div class="d-flex align-items-center justify-content-between border-bottom">
-              <p class="settings-heading border-top-0 mb-3 pl-3 pt-0 border-bottom-0 pb-0">Friends</p>
-              <small class="settings-heading border-top-0 mb-3 pt-0 border-bottom-0 pb-0 pr-3 font-weight-normal">See All</small>
-            </div>
-            <ul class="chat-list">
-              <li class="list active">
-                <div class="profile"><img src="{{asset('assets/images/faces/face1.jpg')}}" alt="image"><span class="online"></span></div>
-                <div class="info">
-                  <p>Thomas Douglas</p>
-                  <p>Available</p>
-                </div>
-                <small class="text-muted my-auto">19 min</small>
-              </li>
-              <li class="list">
-                <div class="profile"><img src="{{asset('assets/images/faces/face2.jpg')}}" alt="image"><span class="offline"></span></div>
-                <div class="info">
-                  <div class="wrapper d-flex">
-                    <p>Catherine</p>
-                  </div>
-                  <p>Away</p>
-                </div>
-                <div class="badge badge-success badge-pill my-auto mx-2">4</div>
-                <small class="text-muted my-auto">23 min</small>
-              </li>
-              <li class="list">
-                <div class="profile"><img src="{{asset('assets/images/faces/face3.jpg')}}" alt="image"><span class="online"></span></div>
-                <div class="info">
-                  <p>Daniel Russell</p>
-                  <p>Available</p>
-                </div>
-                <small class="text-muted my-auto">14 min</small>
-              </li>
-              <li class="list">
-                <div class="profile"><img src="{{asset('assets/images/faces/face4.jpg')}}" alt="image"><span class="offline"></span></div>
-                <div class="info">
-                  <p>James Richardson</p>
-                  <p>Away</p>
-                </div>
-                <small class="text-muted my-auto">2 min</small>
-              </li>
-              <li class="list">
-                <div class="profile"><img src="{{asset('assets/images/faces/face5.jpg')}}" alt="image"><span class="online"></span></div>
-                <div class="info">
-                  <p>Madeline Kennedy</p>
-                  <p>Available</p>
-                </div>
-                <small class="text-muted my-auto">5 min</small>
-              </li>
-              <li class="list">
-                <div class="profile"><img src="{{asset('assets/images/faces/face6.jpg')}}" alt="image"><span class="online"></span></div>
-                <div class="info">
-                  <p>Sarah Graves</p>
-                  <p>Available</p>
-                </div>
-                <small class="text-muted my-auto">47 min</small>
-              </li>
-            </ul>
-          </div>
-          <!-- chat tab ends -->
         </div>
       </div>
       <!-- partial -->
@@ -352,12 +225,6 @@
                 @can('materials-list')
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}">Material List</a></li>
                 @endcan
-                @can('category-list')
-                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-categories.*') ? 'active' : '' }}" href="{{ route('material-categories.index') }}">Categories</a></li>
-                @endcan
-                @can('supplier-list')
-                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">Suppliers</a></li>
-                @endcan
                 @can('purchase-request-list')
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('purchase-requests.*') ? 'active' : '' }}" href="{{ route('purchase-requests.index') }}">Purchase Requests</a></li>
                 @endcan
@@ -365,7 +232,7 @@
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('purchase-orders.*') ? 'active' : '' }}" href="{{ route('purchase-orders.index') }}">Purchase Orders</a></li>
                 @endcan
                 @can('grn-list')
-                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('grns.*') ? 'active' : '' }}" href="{{ route('grns.index') }}">Material Receiving (GRN)</a></li>
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('grns.*') ? 'active' : '' }}" href="{{ route('grns.index') }}">Material Receiving</a></li>
                 @endcan
                 @can('inspection-list')
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('inspections.*') ? 'active' : '' }}" href="{{ route('inspections.index') }}">Material Inspection</a></li>
@@ -383,7 +250,7 @@
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('stock-transfers.*') ? 'active' : '' }}" href="{{ route('stock-transfers.index') }}">Stock Transfer</a></li>
                 @endcan
                 @can('consumption-list')
-                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-consumptions.*') ? 'active' : '' }}" href="{{ route('material-consumptions.index') }}">Material Consumption</a></li>
+                <li class="nav-item"> <a class="nav-link {{ request()->routeIs('material-consumptions.*') ? 'active' : '' }}" href="{{ route('material-consumptions.index') }}">Consumption</a></li>
                 @endcan
                 @can('stock-adjustment-list')
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('stock-adjustments.*') ? 'active' : '' }}" href="{{ route('stock-adjustments.index') }}">Stock Adjustment</a></li>
@@ -418,7 +285,6 @@
     <!-- page-body-wrapper ends -->
   </div>
   <!-- container-scroller -->
-
   <!-- plugins:js -->
   <script src="{{asset('assets/vendors/js/vendor.bundle.base.js')}}"></script>
   <!-- endinject -->
@@ -440,6 +306,99 @@
   <script src="{{asset('assets/js/dashboard.js')}}"></script>
   <script src="{{asset('assets/js/Chart.roundedBarCharts.js')}}"></script>
   <!-- End custom js for this page-->
+   <style>
+    #right-sidebar.settings-panel {
+        height: fit-content !important;
+        min-height: 0 !important;
+        max-height: 80vh !important;
+        bottom: auto !important;
+        overflow-y: auto !important;
+    }
+    #right-sidebar .tab-content,
+    #right-sidebar .tab-pane,
+    #right-sidebar .scroll-wrapper {
+        height: auto !important;
+        min-height: 0 !important;
+    }
+    .material-category-link {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 12px auto;
+        background: #f1f3f9;
+        color: #4B49AC;
+        border-radius: 12px;
+        text-decoration: none !important;
+        transition: all 0.25s ease;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+    .material-category-link i {
+        font-size: 24px;
+    }
+    .material-category-link:hover,
+    .material-category-link.active {
+        background: #4B49AC;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(75, 73, 172, 0.25);
+    }
+    .material-category-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 10px;
+    }
+    .material-category-link {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        background: #f1f3f9;
+        color: #4B49AC;
+        border-radius: 12px;
+        text-decoration: none !important;
+        transition: all 0.25s ease;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+    .material-category-link i {
+        font-size: 23px;
+    }
+    .material-category-link:hover,
+    .material-category-link.active {
+        background: #4B49AC;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(75, 73, 172, 0.25);
+    }
+    .material-category-link {
+      position: relative;
+  }
+  .material-category-link::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50px;
+      top: 65px;
+      transform: translateY(-50%);
+      background: #343a40;
+      color: #fff;
+      padding: 7px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      z-index: 9999;
+  }
+  .material-category-link:hover::after {
+      opacity: 1;
+      visibility: visible;
+  }
+  </style>
    @stack('scripts')
 </body>
 </html>

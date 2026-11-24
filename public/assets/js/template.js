@@ -79,7 +79,23 @@
       } else {
         body.toggleClass('sidebar-icon-only');
       }
+      if (body.hasClass('sidebar-icon-only')) {
+        localStorage.setItem('sidebarMinimized', 'true');
+      } else if (body.hasClass('sidebar-hidden')) {
+          localStorage.setItem('sidebarMinimized', 'true');
+      } else {
+          localStorage.setItem('sidebarMinimized', 'false');
+      }
     });
+    if (localStorage.getItem('sidebarMinimized') === 'true') {
+
+      if ((body.hasClass('sidebar-toggle-display')) || (body.hasClass('sidebar-absolute'))) {
+          body.addClass('sidebar-hidden');
+      } else {
+          body.addClass('sidebar-icon-only');
+      }
+
+    }
 
     //checkbox and radios
     $(".form-check label,.form-radio label").append('<i class="input-helper"></i>');

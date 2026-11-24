@@ -20,7 +20,7 @@ class MaterialInspection extends Model
 
     public function grnItem()
     {
-        return $this->belongsTo(GRNItem::class);
+        return $this->belongsTo(GRNItem::class, 'grn_item_id');
     }
 
     public function inspector()
