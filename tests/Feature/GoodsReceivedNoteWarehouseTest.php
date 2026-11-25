@@ -88,6 +88,38 @@ class GoodsReceivedNoteWarehouseTest extends TestCase
         $this->assertEquals(5, (float) $inventory->quantity);
     }
 
+    public function test_grn_pages_show_the_purchase_order_even_if_it_was_soft_deleted(): void
+    {
+        $this->seed(RolePermissionSeeder::class);
+        $user = User::factory()->create();
+        $user->assignRole('Super Admin');
+        [$purchaseOrder] = $this->createApprovedPurchaseOrder($user);
+        $warehouse = Warehouse::create([
+            'code' => 'WH-GRN-TEST',
+            'name' => 'GRN Test Warehouse',
+            'status' => 1,
+        ]);
+        $grn = GoodsReceivedNote::create([
+            'grn_number' => 'GRN-2026-TEST',
+            'purchase_order_id' => $purchaseOrder->id,
+            'warehouse_id' => $warehouse->id,
+            'received_by' => $user->id,
+            'received_date' => '2026-11-23',
+            'status' => 'Draft',
+        ]);
+        $purchaseOrder->delete();
+
+        $this->actingAs($user)
+            ->get(route('grns.index'))
+            ->assertOk()
+            ->assertSee($purchaseOrder->po_number);
+
+        $this->actingAs($user)
+            ->get(route('grns.show', $grn))
+            ->assertOk()
+            ->assertSee($purchaseOrder->po_number);
+    }
+
     private function createApprovedPurchaseOrder(User $user): array
     {
         $supplier = Supplier::create([

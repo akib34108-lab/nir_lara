@@ -130,6 +130,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('purchase-orders/{purchase_order}/cancel', [PurchaseOrderController::class, 'cancel'])
         ->middleware('permission:purchase-order-edit')
         ->name('purchase-orders.cancel');
+    Route::get('purchase-requests/{purchase_request}/purchase-orders/create', [PurchaseOrderController::class, 'createForRequest'])
+        ->middleware('permission:purchase-order-create')
+        ->name('purchase-requests.purchase-orders.create');
+    Route::post('purchase-requests/{purchase_request}/purchase-orders', [PurchaseOrderController::class, 'storeForRequest'])
+        ->middleware('permission:purchase-order-create')
+        ->name('purchase-requests.purchase-orders.store');
 
     Route::resource('grns', GoodsReceivedNoteController::class)
         ->except(['edit', 'update'])

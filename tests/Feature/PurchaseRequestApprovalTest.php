@@ -66,7 +66,7 @@ class PurchaseRequestApprovalTest extends TestCase
         $this->actingAs($requester)
             ->get(route('purchase-requests.show', $purchaseRequest))
             ->assertOk()
-            ->assertSee('you cannot approve or reject your own request')
+            ->assertSee('Another user with approval permission must review it.')
             ->assertDontSee('Approve / Partially Approve');
 
         $this->actingAs($requester)

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PurchaseOrderController extends Controller
 {
@@ -47,6 +51,33 @@ class PurchaseOrderController extends Controller
         return view('purchase-orders.create', compact('suppliers', 'purchaseRequests', 'selectedRequest'));
     }
 
+    public function createForRequest(PurchaseRequest $purchase_request)
+    {
+        if (! in_array($purchase_request->status, ['Approved', 'Partially Approved'], true)) {
+            abort(422, 'Purchase orders can only be created from approved purchase requests.');
+        }
+
+        $purchase_request->load(['project', 'items.material']);
+        $orderedQuantities = $this->orderedQuantities($purchase_request->items);
+        $remainingQuantities = [];
+        foreach ($purchase_request->items as $item) {
+            $remainingQuantities[$item->id] = max(
+                0,
+                (float) $item->approved_quantity - ($orderedQuantities[$item->id] ?? 0)
+            );
+        }
+        $hasRemainingQuantities = collect($remainingQuantities)->contains(fn ($quantity) => $quantity > 0.0001);
+        $suppliers = Supplier::where('status', 1)->orderBy('company_name')->get();
+
+        return view('purchase-orders.create-for-request', compact(
+            'purchase_request',
+            'remainingQuantities',
+            'orderedQuantities',
+            'hasRemainingQuantities',
+            'suppliers'
+        ));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -74,11 +105,7 @@ class PurchaseOrderController extends Controller
                 abort(422, 'Purchase orders can only be created from approved purchase requests.');
             }
 
-            $nextId = (PurchaseOrder::withTrashed()->max('id') ?? 0) + 1;
-            $poNumber = 'PO-'.now()->format('Y').'-'.str_pad($nextId, 5, '0', STR_PAD_LEFT);
-
-            $purchaseOrder = PurchaseOrder::create([
-                'po_number' => $poNumber,
+            $purchaseOrder = $this->createPurchaseOrder([
                 'purchase_request_id' => $purchaseRequest->id,
                 'supplier_id' => $validated['supplier_id'],
                 'created_by' => $request->user()->id,
@@ -135,6 +162,173 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.show', $purchaseOrder)
             ->with('success', 'Purchase order created successfully.');
+    }
+
+    public function storeForRequest(Request $request, PurchaseRequest $purchase_request)
+    {
+        $validated = $request->validate([
+            'order_date' => 'required|date',
+            'expected_delivery_date' => 'nullable|date|after_or_equal:order_date',
+            'payment_terms' => 'nullable|string|max:255',
+            'notes' => 'nullable|string',
+            'items' => 'required|array|min:1',
+            'items.*' => 'array',
+            'items.*.supplier_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('suppliers', 'id')->where('status', 1)->whereNull('deleted_at'),
+            ],
+            'items.*.ordered_quantity' => 'nullable|numeric|min:0|max:999999999999.999|decimal:0,3',
+            'items.*.unit_price' => 'nullable|numeric|min:0|max:9999999999999.99|decimal:0,2',
+        ]);
+
+        $selectedItems = [];
+        $selectionErrors = [];
+        foreach ($validated['items'] as $itemId => $item) {
+            $supplierId = $item['supplier_id'] ?? null;
+            $quantity = (string) ($item['ordered_quantity'] ?? '0');
+            $unitPrice = $item['unit_price'] ?? null;
+
+            if (($supplierId === null || $supplierId === '') && $this->quantityInMilliunits($quantity) <= 0) {
+                continue;
+            }
+            if ($supplierId === null || $supplierId === '') {
+                $selectionErrors["items.$itemId.supplier_id"] = 'Select a supplier for each quantity to order.';
+            } elseif ($this->quantityInMilliunits($quantity) <= 0) {
+                $selectionErrors["items.$itemId.ordered_quantity"] = 'Enter a quantity greater than zero.';
+            } elseif ($unitPrice === null || $unitPrice === '') {
+                $selectionErrors["items.$itemId.unit_price"] = 'Enter a unit price for each selected item.';
+            }
+
+            if ($supplierId !== null && $supplierId !== '' && $this->quantityInMilliunits($quantity) > 0 && $unitPrice !== null && $unitPrice !== '') {
+                $selectedItems[] = [
+                    'purchase_request_item_id' => (int) $itemId,
+                    'supplier_id' => (int) $supplierId,
+                    'ordered_quantity' => $quantity,
+                    'unit_price' => (string) $unitPrice,
+                ];
+            }
+        }
+
+        if ($selectionErrors) {
+            throw ValidationException::withMessages($selectionErrors);
+        }
+        if (! $selectedItems) {
+            throw ValidationException::withMessages([
+                'items' => 'Select at least one material, supplier, quantity, and unit price.',
+            ]);
+        }
+
+        $purchaseOrders = DB::transaction(function () use ($validated, $selectedItems, $request, $purchase_request) {
+            $purchaseRequest = PurchaseRequest::whereKey($purchase_request->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! in_array($purchaseRequest->status, ['Approved', 'Partially Approved'], true)) {
+                abort(422, 'Purchase orders can only be created from approved purchase requests.');
+            }
+
+            $itemsBySupplier = [];
+            foreach ($selectedItems as $item) {
+                $requestItem = $purchaseRequest->items()
+                    ->whereKey($item['purchase_request_item_id'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $requestItem || (float) $requestItem->approved_quantity <= 0) {
+                    throw ValidationException::withMessages([
+                        'items' => 'A selected item is not an approved item in this purchase request.',
+                    ]);
+                }
+
+                $alreadyOrdered = $requestItem->purchaseOrderItems()
+                    ->whereHas('purchaseOrder', function ($query) {
+                        $query->where('status', '!=', 'Cancelled');
+                    })
+                    ->sum('ordered_quantity');
+                $remaining = $this->quantityInMilliunits($requestItem->approved_quantity)
+                    - $this->quantityInMilliunits($alreadyOrdered);
+
+                if ($this->quantityInMilliunits($item['ordered_quantity']) > $remaining) {
+                    throw ValidationException::withMessages([
+                        "items.{$requestItem->id}.ordered_quantity" => 'Ordered quantity cannot exceed the approved remaining quantity.',
+                    ]);
+                }
+
+                $itemsBySupplier[$item['supplier_id']][] = [
+                    'request_item' => $requestItem,
+                    'ordered_quantity' => $item['ordered_quantity'],
+                    'unit_price' => $item['unit_price'],
+                ];
+            }
+
+            foreach (array_keys($itemsBySupplier) as $supplierId) {
+                $supplier = Supplier::whereKey($supplierId)
+                    ->where('status', 1)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (! $supplier) {
+                    throw ValidationException::withMessages([
+                        'items' => 'A selected supplier is no longer active.',
+                    ]);
+                }
+            }
+
+            $purchaseOrders = [];
+            foreach ($itemsBySupplier as $supplierId => $items) {
+                $purchaseOrder = $this->createPurchaseOrder([
+                    'purchase_request_id' => $purchaseRequest->id,
+                    'supplier_id' => $supplierId,
+                    'created_by' => $request->user()->id,
+                    'order_date' => $validated['order_date'],
+                    'expected_delivery_date' => $validated['expected_delivery_date'] ?? null,
+                    'payment_terms' => $validated['payment_terms'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
+                    'discount' => 0,
+                    'tax' => 0,
+                    'grand_total' => 0,
+                    'status' => 'Draft',
+                ]);
+
+                $grandTotal = 0;
+                foreach ($items as $item) {
+                    $subtotal = round($item['ordered_quantity'] * $item['unit_price'], 2);
+                    if (! is_finite($subtotal) || $subtotal > 9999999999999.99) {
+                        throw ValidationException::withMessages([
+                            "items.{$item['request_item']->id}.unit_price" => 'The item subtotal exceeds the maximum supported amount.',
+                        ]);
+                    }
+                    $grandTotal += $subtotal;
+                    if ($grandTotal > 9999999999999.99) {
+                        throw ValidationException::withMessages([
+                            'items' => 'The purchase order total exceeds the maximum supported amount.',
+                        ]);
+                    }
+
+                    $purchaseOrder->items()->create([
+                        'purchase_request_item_id' => $item['request_item']->id,
+                        'material_id' => $item['request_item']->material_id,
+                        'ordered_quantity' => $item['ordered_quantity'],
+                        'unit_price' => $item['unit_price'],
+                        'subtotal' => $subtotal,
+                    ]);
+                }
+
+                $purchaseOrder->update(['grand_total' => round($grandTotal, 2)]);
+                $purchaseOrders[] = $purchaseOrder;
+            }
+
+            return $purchaseOrders;
+        });
+
+        $firstOrder = $purchaseOrders[0];
+        $destination = $request->user()->can('purchase-order-list')
+            ? route('purchase-orders.show', $firstOrder)
+            : route('purchase-requests.purchase-orders.create', $purchase_request);
+
+        return redirect($destination)
+            ->with('success', count($purchaseOrders).' purchase order(s) generated successfully.');
     }
 
     public function show(PurchaseOrder $purchase_order)
@@ -294,10 +488,52 @@ class PurchaseOrderController extends Controller
             if (in_array($lockedOrder->status, ['Completed', 'Cancelled', 'Partially Received'], true)) {
                 abort(422, 'This purchase order cannot be cancelled.');
             }
+            if ($lockedOrder->goodsReceivedNotes()->where('status', '!=', 'Cancelled')->exists()) {
+                abort(422, 'This purchase order cannot be cancelled while an active GRN exists.');
+            }
             $lockedOrder->update(['status' => 'Cancelled']);
         });
 
         return redirect()->route('purchase-orders.show', $purchase_order)
             ->with('success', 'Purchase order cancelled.');
+    }
+
+    private function orderedQuantities($requestItems): array
+    {
+        $itemIds = collect($requestItems)->pluck('id');
+        if ($itemIds->isEmpty()) {
+            return [];
+        }
+
+        return PurchaseOrderItem::query()
+            ->whereIn('purchase_request_item_id', $itemIds)
+            ->whereHas('purchaseOrder', function ($query) {
+                $query->where('status', '!=', 'Cancelled');
+            })
+            ->selectRaw('purchase_request_item_id, SUM(ordered_quantity) as ordered_quantity')
+            ->groupBy('purchase_request_item_id')
+            ->pluck('ordered_quantity', 'purchase_request_item_id')
+            ->map(fn ($quantity) => (float) $quantity)
+            ->all();
+    }
+
+    private function quantityInMilliunits($quantity): int
+    {
+        [$whole, $fraction] = array_pad(explode('.', (string) $quantity, 2), 2, '');
+
+        return ((int) $whole * 1000) + (int) str_pad($fraction, 3, '0');
+    }
+
+    private function createPurchaseOrder(array $attributes): PurchaseOrder
+    {
+        $purchaseOrder = PurchaseOrder::create($attributes + [
+            'po_number' => 'PO-TEMP-'.Str::uuid(),
+        ]);
+
+        $purchaseOrder->update([
+            'po_number' => 'PO-'.now()->format('Y').'-'.str_pad((string) $purchaseOrder->id, 5, '0', STR_PAD_LEFT),
+        ]);
+
+        return $purchaseOrder;
     }
 }

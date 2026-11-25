@@ -39,7 +39,6 @@
                                     <th>Contact Person</th>
                                     <th>Address</th>
                                     <th>Tax</th>
-                                    <th>Status</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -47,7 +46,7 @@
                             @forelse($suppliers as $supplier)
                                 <tr>
                                     <td>{{ $supplier->supplier_code }}</td>
-                                    <td>{{ $supplier->company_name }}</td>
+                                    <td>{{ $supplier->company_name }}<span class="badge badge-{{ $supplier->status == 1 ? 'success' : 'secondary' }}">{{ $supplier->status == 1 ? 'Active' : 'Inactive' }}</span></td>
                                     <td>
                                         <div>
                                             <span  class="font-weight-medium">{{ $supplier->contact_person ?: '-' }}</span><br/>
@@ -57,9 +56,6 @@
                                     </td>
                                     <td>{{ $supplier->address }}, {{ $supplier->city }}</td>
                                     <td>{{ $supplier->tax_number }}</td>
-                                    <td>
-                                        <span class="badge badge-{{ $supplier->status == 1 ? 'success' : 'secondary' }}">{{ $supplier->status == 1 ? 'Active' : 'Inactive' }}</span>
-                                    </td>
                                     <td>
                                         <div class="dropdown">
                                             <button class="btn btn-light btn-sm" data-toggle="dropdown"><i class="ti-more-alt"></i></button>
