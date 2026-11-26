@@ -22,6 +22,21 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_only_the_material_menu_is_expanded_on_purchase_order_pages(): void
+    {
+        [$user] = $this->createApprovedRequest();
+
+        $this->actingAs($user)
+            ->get(route('purchase-orders.index'))
+            ->assertOk()
+            ->assertSee('href="#material-menu" aria-expanded="true"', false)
+            ->assertSee('class="collapse show" id="material-menu"', false)
+            ->assertSee('class="collapse" id="users-access-menu"', false)
+            ->assertSee('class="collapse" id="projects-menu"', false)
+            ->assertDontSee('class="collapse show" id="users-access-menu"', false)
+            ->assertDontSee('class="collapse show" id="projects-menu"', false);
+    }
+
     public function test_approved_request_items_are_grouped_by_supplier_and_can_be_ordered_partially(): void
     {
         [$user, $purchaseRequest, $items, $supplierA, $supplierB] = $this->createApprovedRequest();
@@ -29,7 +44,6 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
         $this->actingAs($user)
             ->get(route('purchase-requests.purchase-orders.create', $purchaseRequest))
             ->assertOk()
-            ->assertSee('Already Ordered')
             ->assertSee('Remaining');
 
         $this->actingAs($user)
@@ -56,13 +70,52 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
                 'items' => [
                     $items[0]->id => [
                         'supplier_id' => $supplierA->id,
+                        'ordered_quantity' => 1,
+                        'unit_price' => 10,
+                        'discount' => 10.01,
+                        'tax' => 0,
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors("items.{$items[0]->id}.discount");
+
+        $this->assertDatabaseCount('purchase_orders', 0);
+
+        $this->actingAs($user)
+            ->post(route('purchase-requests.purchase-orders.store', $purchaseRequest), [
+                'order_date' => '2026-11-25',
+                'items' => [
+                    $items[0]->id => [
+                        'supplier_id' => $supplierA->id,
+                        'ordered_quantity' => 1,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors([
+                "items.{$items[0]->id}.discount",
+                "items.{$items[0]->id}.tax",
+            ]);
+
+        $this->assertDatabaseCount('purchase_orders', 0);
+
+        $this->actingAs($user)
+            ->post(route('purchase-requests.purchase-orders.store', $purchaseRequest), [
+                'order_date' => '2026-11-25',
+                'items' => [
+                    $items[0]->id => [
+                        'supplier_id' => $supplierA->id,
                         'ordered_quantity' => 5,
                         'unit_price' => 10,
+                        'discount' => 0,
+                        'tax' => 0,
                     ],
                     $items[1]->id => [
                         'supplier_id' => $supplierB->id,
                         'ordered_quantity' => 6.001,
                         'unit_price' => 3,
+                        'discount' => 0,
+                        'tax' => 0,
                     ],
                 ],
             ])
@@ -78,16 +131,22 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
                         'supplier_id' => $supplierA->id,
                         'ordered_quantity' => 5,
                         'unit_price' => 10,
+                        'discount' => 2,
+                        'tax' => 5,
                     ],
                     $items[1]->id => [
                         'supplier_id' => $supplierB->id,
                         'ordered_quantity' => 6,
                         'unit_price' => 3,
+                        'discount' => 1,
+                        'tax' => 2,
                     ],
                     $items[2]->id => [
                         'supplier_id' => $supplierA->id,
                         'ordered_quantity' => 3,
                         'unit_price' => 4,
+                        'discount' => 0.50,
+                        'tax' => 0.75,
                     ],
                 ],
             ])
@@ -104,9 +163,13 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
         $this->assertNotNull($supplierAOrder);
         $this->assertNotNull($supplierBOrder);
         $this->assertSame('PO-2026-'.str_pad((string) $supplierAOrder->id, 5, '0', STR_PAD_LEFT), $supplierAOrder->po_number);
-        $this->assertEquals(62, (float) $supplierAOrder->grand_total);
+        $this->assertEquals(2.5, (float) $supplierAOrder->discount);
+        $this->assertEquals(5.75, (float) $supplierAOrder->tax);
+        $this->assertEquals(65.25, (float) $supplierAOrder->grand_total);
         $this->assertCount(2, $supplierAOrder->items);
-        $this->assertEquals(18, (float) $supplierBOrder->grand_total);
+        $this->assertEquals(1, (float) $supplierBOrder->discount);
+        $this->assertEquals(2, (float) $supplierBOrder->tax);
+        $this->assertEquals(19, (float) $supplierBOrder->grand_total);
         $this->assertCount(1, $supplierBOrder->items);
         $this->assertSame($purchaseRequest->id, $supplierAOrder->purchase_request_id);
         $this->assertSame($items[0]->id, $supplierAOrder->items->firstWhere('material_id', $items[0]->material_id)->purchase_request_item_id);
@@ -124,6 +187,8 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
                         'supplier_id' => $supplierA->id,
                         'ordered_quantity' => 5,
                         'unit_price' => 11,
+                        'discount' => 0,
+                        'tax' => 0,
                     ],
                 ],
             ])
@@ -139,6 +204,8 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
                         'supplier_id' => $supplierA->id,
                         'ordered_quantity' => 0.001,
                         'unit_price' => 11,
+                        'discount' => 0,
+                        'tax' => 0,
                     ],
                 ],
             ])
@@ -214,6 +281,8 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
                         'supplier_id' => $supplierA->id,
                         'ordered_quantity' => 1,
                         'unit_price' => 10,
+                        'discount' => 0,
+                        'tax' => 0,
                     ],
                 ],
             ])
@@ -223,6 +292,32 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
             ->get(route('purchase-requests.purchase-orders.create', $purchaseRequest))
             ->assertOk()
             ->assertSee('1 purchase order(s) generated successfully.');
+    }
+
+    public function test_purchase_order_create_page_loads_request_items_from_the_project_dropdown(): void
+    {
+        [$user, $purchaseRequest, $items] = $this->createApprovedRequest();
+
+        $this->actingAs($user)
+            ->get(route('purchase-orders.create'))
+            ->assertOk()
+            ->assertSee('Approved Project / Purchase Request')
+            ->assertSee($purchaseRequest->project->project_name)
+            ->assertDontSee($items[0]->material->name);
+
+        $this->actingAs($user)
+            ->get(route('purchase-orders.create', ['purchase_request' => $purchaseRequest->id]))
+            ->assertOk()
+            ->assertSee($items[0]->material->name)
+            ->assertSee($items[1]->material->name)
+            ->assertSee($items[2]->material->name)
+            ->assertSee('name="items['.$items[0]->id.'][ordered_quantity]"', false)
+            ->assertSee('name="items['.$items[0]->id.'][supplier_id]"', false)
+            ->assertSee('name="items['.$items[0]->id.'][unit_price]"', false)
+            ->assertSee('name="items['.$items[0]->id.'][discount]"', false)
+            ->assertSee('name="items['.$items[0]->id.'][tax]"', false)
+            ->assertSee(route('purchase-requests.purchase-orders.store', $purchaseRequest), false)
+            ->assertSee('Supplier-Based Purchase Order Preview');
     }
 
     public function test_purchase_orders_cannot_be_created_from_pending_or_rejected_requests(): void
@@ -241,6 +336,8 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
                     'supplier_id' => $supplierA->id,
                     'ordered_quantity' => 1,
                     'unit_price' => 10,
+                    'discount' => 0,
+                    'tax' => 0,
                 ],
             ],
         ];
@@ -254,6 +351,205 @@ class SupplierBasedPurchaseOrderGenerationTest extends TestCase
             ->assertStatus(422);
 
         $this->assertDatabaseCount('purchase_orders', 0);
+    }
+
+    public function test_purchase_order_edits_keep_totals_correct_and_enforce_aggregate_quantities(): void
+    {
+        [$user, $purchaseRequest, $items, $supplierA] = $this->createApprovedRequest();
+
+        $this->actingAs($user)
+            ->post(route('purchase-orders.store'), [
+                'purchase_request_id' => $purchaseRequest->id,
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'purchase_request_item_id' => $items[0]->id,
+                        'material_id' => $items[0]->material_id,
+                        'ordered_quantity' => 4,
+                        'unit_price' => 10,
+                    ],
+                    [
+                        'purchase_request_item_id' => $items[0]->id,
+                        'material_id' => $items[0]->material_id,
+                        'ordered_quantity' => 4,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertRedirect();
+
+        $purchaseOrder = PurchaseOrder::where('purchase_request_id', $purchaseRequest->id)->firstOrFail();
+        $orderItems = $purchaseOrder->items()->orderBy('id')->get();
+        $this->assertCount(2, $orderItems);
+
+        $this->actingAs($user)
+            ->put(route('purchase-orders.update', $purchaseOrder), [
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'id' => $orderItems[0]->id,
+                        'ordered_quantity' => 3,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('purchase-orders.show', $purchaseOrder));
+
+        $purchaseOrder->refresh();
+        $this->assertEquals(70, (float) $purchaseOrder->grand_total);
+        $this->assertEquals(3, (float) $orderItems[0]->fresh()->ordered_quantity);
+        $this->assertEquals(4, (float) $orderItems[1]->fresh()->ordered_quantity);
+
+        $this->actingAs($user)
+            ->put(route('purchase-orders.update', $purchaseOrder), [
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'id' => $orderItems[0]->id,
+                        'ordered_quantity' => 8,
+                        'unit_price' => 10,
+                    ],
+                    [
+                        'id' => $orderItems[1]->id,
+                        'ordered_quantity' => 8,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertStatus(422);
+
+        $this->actingAs($user)
+            ->put(route('purchase-orders.update', $purchaseOrder), [
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'id' => $orderItems[0]->id,
+                        'ordered_quantity' => 2,
+                        'unit_price' => 10,
+                    ],
+                    [
+                        'id' => $orderItems[0]->id,
+                        'ordered_quantity' => 3,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors();
+
+        $purchaseOrder->refresh();
+        $this->assertEquals(70, (float) $purchaseOrder->grand_total);
+        $this->assertEquals(3, (float) $orderItems[0]->fresh()->ordered_quantity);
+        $this->assertEquals(4, (float) $orderItems[1]->fresh()->ordered_quantity);
+    }
+
+    public function test_legacy_purchase_order_routes_reject_inactive_suppliers(): void
+    {
+        [$user, $purchaseRequest, $items, $supplierA] = $this->createApprovedRequest();
+
+        $this->actingAs($user)
+            ->post(route('purchase-orders.store'), [
+                'purchase_request_id' => $purchaseRequest->id,
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'purchase_request_item_id' => $items[0]->id,
+                        'material_id' => $items[0]->material_id,
+                        'ordered_quantity' => 1,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertRedirect();
+
+        $purchaseOrder = PurchaseOrder::where('purchase_request_id', $purchaseRequest->id)->firstOrFail();
+        $orderItem = $purchaseOrder->items()->firstOrFail();
+        $supplierA->update(['status' => 0]);
+
+        $this->actingAs($user)
+            ->post(route('purchase-orders.store'), [
+                'purchase_request_id' => $purchaseRequest->id,
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'purchase_request_item_id' => $items[1]->id,
+                        'material_id' => $items[1]->material_id,
+                        'ordered_quantity' => 1,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors('supplier_id');
+
+        $this->actingAs($user)
+            ->put(route('purchase-orders.update', $purchaseOrder), [
+                'supplier_id' => $supplierA->id,
+                'order_date' => '2026-11-25',
+                'discount' => 0,
+                'tax' => 0,
+                'items' => [
+                    [
+                        'id' => $orderItem->id,
+                        'ordered_quantity' => 1,
+                        'unit_price' => 10,
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors('supplier_id');
+
+        $this->assertDatabaseCount('purchase_orders', 1);
+        $this->assertDatabaseHas('purchase_orders', [
+            'id' => $purchaseOrder->id,
+            'supplier_id' => $supplierA->id,
+            'grand_total' => 10,
+        ]);
+    }
+
+    public function test_supplier_group_generation_rolls_back_all_orders_on_a_later_group_failure(): void
+    {
+        [$user, $purchaseRequest, $items, $supplierA, $supplierB] = $this->createApprovedRequest();
+
+        $this->actingAs($user)
+            ->post(route('purchase-requests.purchase-orders.store', $purchaseRequest), [
+                'order_date' => '2026-11-25',
+                'items' => [
+                    $items[0]->id => [
+                        'supplier_id' => $supplierA->id,
+                        'ordered_quantity' => 1,
+                        'unit_price' => 10,
+                        'discount' => 0,
+                        'tax' => 0,
+                    ],
+                    $items[1]->id => [
+                        'supplier_id' => $supplierB->id,
+                        'ordered_quantity' => 6,
+                        'unit_price' => 9000000000000,
+                        'discount' => 0,
+                        'tax' => 0,
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors("items.{$items[1]->id}.unit_price");
+
+        $this->assertDatabaseCount('purchase_orders', 0);
+        $this->assertDatabaseCount('purchase_order_items', 0);
     }
 
     private function createApprovedRequest(): array

@@ -180,6 +180,7 @@
       <!-- partial -->
       <!-- partial:partials/_sidebar.html -->
       <nav class="sidebar sidebar-offcanvas" id="sidebar">
+        @php($isPurchaseOrderRoute = request()->routeIs('purchase-orders.*'))
         <ul class="nav">
           @can('users-list')
           <li class="nav-item">
@@ -215,12 +216,12 @@
           @endcan
           @canany(['materials-list', 'category-list', 'supplier-list', 'purchase-request-list', 'purchase-order-list', 'grn-list', 'inspection-list', 'inventory-list', 'material-issue-list', 'material-return-list', 'stock-transfer-list', 'consumption-list', 'stock-adjustment-list', 'material-report-view'])
           <li class="nav-item">
-            <a class="nav-link" data-toggle="collapse" href="#material-menu" aria-expanded="false" aria-controls="material-menu">
+            <a class="nav-link {{ $isPurchaseOrderRoute ? 'active' : '' }}" data-toggle="collapse" href="#material-menu" aria-expanded="{{ $isPurchaseOrderRoute ? 'true' : 'false' }}" aria-controls="material-menu">
               <i class="icon-box menu-icon"></i>
               <span class="menu-title">Material</span>
               <i class="menu-arrow"></i>
             </a>
-            <div class="collapse" id="material-menu">
+            <div class="collapse {{ $isPurchaseOrderRoute ? 'show' : '' }}" id="material-menu">
               <ul class="nav flex-column sub-menu">
                 @can('materials-list')
                 <li class="nav-item"> <a class="nav-link {{ request()->routeIs('materials.*') ? 'active' : '' }}" href="{{ route('materials.index') }}">Material List</a></li>

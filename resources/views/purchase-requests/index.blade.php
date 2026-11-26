@@ -25,7 +25,7 @@
                                             style="width: 280px;">
                                     </div>
                                     <div class="mr-2">
-                                        <select name="category"
+                                        <select name="project"
                                                 class="form-control"
                                                 style="width: 180px;"
                                                 onchange="document.getElementById('materialFilterForm').submit()">
