@@ -1,5 +1,7 @@
-@extends('layouts.master')
-@section('content')
+@include('layouts.partials.header')
+@include('layouts.partials.navbar')
+@include('layouts.partials.sidebar')
+<div class="main-panel">
 <div class="content-wrapper">
     <div class="row">
         <div class="col-12 grid-margin stretch-card">
@@ -115,7 +117,6 @@
         </div>
     </div>
 </div>
-@endsection
 @push('scripts')
 <script>
     $(document).ready(function () {
@@ -157,3 +158,4 @@
     });
 </script>
 @endpush
+@include('layouts.partials.footer')

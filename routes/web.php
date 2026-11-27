@@ -1,8 +1,13 @@
 <?php
 
+use App\Http\Controllers\SitesController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\BuildingController;
+use App\Http\Controllers\BuildingAmenityController;
+use App\Http\Controllers\FloorController;
+use App\Http\Controllers\AmenityController;
+use App\Http\Controllers\FloorPlanController;
 use App\Http\Controllers\GoodsReceivedNoteController;
-use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MaterialCategoryController;
 use App\Http\Controllers\MaterialConsumptionController;
 use App\Http\Controllers\MaterialController;
@@ -31,9 +36,105 @@ Route::middleware(['auth'])->group(function () {
 
     // Dashboard
     Route::get('/', function () {
-        return view('welcome');})->name('welcome');
-    Route::get('/home', [HomeController::class, 'index'])
-        ->name('home');
+    if (auth()->user()->can('central-view')) {
+        session(['dashboard_context' => 'admin']);
+        return view('dashboards.admin');
+    } elseif (auth()->user()->can('projects-list')) {
+        session(['dashboard_context' => 'project_manager']);
+        return view('dashboards.project');
+    } elseif (auth()->user()->can('sites-list')) {
+        session(['dashboard_context' => 'shareholder']);
+        return view('dashboards.shareholder');
+    } elseif (auth()->user()->can('users-list')) {
+        session(['dashboard_context' => 'system']);
+        return view('dashboards.system');
+    } else {
+        abort(403, 'Unauthorized Access');
+    }
+    })->middleware('auth')->name('home');
+
+    Route::get('/cms', function () {
+        session(['dashboard_context' => 'project_manager']);
+        return view('dashboards.project');
+    })->middleware('auth')->name('projects');
+
+    Route::get('/shms', function () {
+        session(['dashboard_context' => 'shareholder']);
+        return view('dashboards.shareholder');
+    })->middleware('auth')->name('shareholder');
+
+    Route::get('/system', function () {
+        session(['dashboard_context' => 'system']);
+        return view('dashboards.system');
+    })->middleware('auth')->name('system');
+
+    Route::resource('sites', SitesController::class)
+        ->middlewareFor('index', 'permission:sites-list')
+        ->middlewareFor(['create', 'store'], 'permission:sites-create')
+        ->middlewareFor('show', 'permission:sites-view')
+        ->middlewareFor(['edit', 'update'], 'permission:sites-edit')
+        ->middlewareFor('destroy', 'permission:sites-delete');
+
+    Route::resource('buildings', BuildingController::class)
+        ->middlewareFor('index', 'permission:buildings-list')
+        ->middlewareFor(['create', 'store'], 'permission:buildings-create')
+        ->middlewareFor('show', 'permission:buildings-view')
+        ->middlewareFor(['edit', 'update'], 'permission:buildings-edit')
+        ->middlewareFor('destroy', 'permission:buildings-delete');
+
+    Route::get('floors', [FloorController::class, 'index'])
+        ->middleware('permission:floors-list')
+        ->name('floors.index');
+
+    Route::resource('buildings.floors', FloorController::class)
+        ->except(['index'])
+        ->shallow()
+        ->middlewareFor(['create', 'store'], 'permission:floors-create')
+        ->middlewareFor('show', 'permission:floors-view')
+        ->middlewareFor(['edit', 'update'], 'permission:floors-edit')
+        ->middlewareFor('destroy', 'permission:floors-delete');
+
+    Route::resource('amenities', AmenityController::class)
+        ->middlewareFor('index', 'permission:amenities-list')
+        ->middlewareFor(['create', 'store'], 'permission:amenities-create')
+        ->middlewareFor('show', 'permission:amenities-view')
+        ->middlewareFor(['edit', 'update'], 'permission:amenities-edit')
+        ->middlewareFor('destroy', 'permission:amenities-delete');
+
+    Route::post('buildings/{building}/amenities', [BuildingAmenityController::class, 'store'])
+        ->middleware('permission:buildings-edit')
+        ->name('buildings.amenities.store');
+    Route::put('buildings/{building}/amenities/{amenity}', [BuildingAmenityController::class, 'update'])
+        ->middleware('permission:buildings-edit')
+        ->name('buildings.amenities.update');
+    Route::delete('buildings/{building}/amenities/{amenity}', [BuildingAmenityController::class, 'destroy'])
+        ->middleware('permission:buildings-edit')
+        ->name('buildings.amenities.destroy');
+
+    Route::get('floor-plans', [FloorPlanController::class, 'index'])
+        ->middleware('permission:floor-plans-list')
+        ->name('floor-plans.index');
+    Route::get('floor-plans/create', [FloorPlanController::class, 'create'])
+        ->middleware('permission:floor-plans-create')
+        ->name('floor-plans.create');
+    Route::post('floor-plans', [FloorPlanController::class, 'store'])
+        ->middleware('permission:floor-plans-create')
+        ->name('floor-plans.store');
+    Route::get('floor-plans/{floorPlan}/preview', [FloorPlanController::class, 'preview'])
+        ->middleware('permission:floor-plans-view')
+        ->name('floor-plans.preview');
+    Route::get('floor-plans/{floorPlan}/download', [FloorPlanController::class, 'download'])
+        ->middleware('permission:floor-plans-view')
+        ->name('floor-plans.download');
+    Route::get('floor-plans/{floorPlan}/edit', [FloorPlanController::class, 'edit'])
+        ->middleware('permission:floor-plans-edit')
+        ->name('floor-plans.edit');
+    Route::put('floor-plans/{floorPlan}', [FloorPlanController::class, 'update'])
+        ->middleware('permission:floor-plans-edit')
+        ->name('floor-plans.update');
+    Route::delete('floor-plans/{floorPlan}', [FloorPlanController::class, 'destroy'])
+        ->middleware('permission:floor-plans-delete')
+        ->name('floor-plans.destroy');
 
     Route::resource('clients', ClientController::class)
         ->middlewareFor('index', 'permission:clients-list')

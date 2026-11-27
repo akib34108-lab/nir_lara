@@ -1,5 +1,7 @@
-@extends('layouts.master')
-@section('content')
+@include('layouts.partials.header')
+@include('layouts.partials.navbar')
+@include('layouts.partials.sidebar')
+<div class="main-panel">
 <style>
     .popover {
         max-width: 280px;
@@ -127,4 +129,4 @@
     });
 </script>
 @endpush
-@endsection
+@include('layouts.partials.footer')

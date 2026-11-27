@@ -22,6 +22,7 @@ class RolePermissionSeeder extends Seeder
             'Project Manager',
             'HR Manager',
             'Client',
+            'Shareholder',
         ];
 
         foreach ($roles as $role) {
@@ -75,6 +76,16 @@ class RolePermissionSeeder extends Seeder
             'material-report' => ['view', 'export'],
 
             'clients' => ['list', 'create', 'view', 'edit', 'delete'],
+
+            'sites' => ['list', 'create', 'view', 'edit', 'delete'],
+
+            'buildings' => ['list', 'create', 'view', 'edit', 'delete'],
+
+            'floors' => ['list', 'create', 'view', 'edit', 'delete'],
+
+            'amenities' => ['list', 'create', 'view', 'edit', 'delete'],
+
+            'floor-plans' => ['list', 'create', 'view', 'edit', 'delete'],
 
             'roles' => ['list', 'create', 'edit', 'delete'],
 
@@ -174,6 +185,20 @@ class RolePermissionSeeder extends Seeder
                 'dashboard-view',
                 'projects-list',
                 'projects-view',
+            ],
+
+            'Shareholder' => [
+                'dashboard-view',
+                'sites-list',
+                'sites-view',
+                'buildings-list',
+                'buildings-view',
+                'floors-list',
+                'floors-view',
+                'amenities-list',
+                'amenities-view',
+                'floor-plans-list',
+                'floor-plans-view',
             ],
 
         ];
