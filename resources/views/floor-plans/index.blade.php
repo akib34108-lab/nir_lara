@@ -3,13 +3,6 @@
 @include('layouts.partials.sidebar')
 <div class="main-panel">
     <div class="content-wrapper">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item">Property Management</li>
-                <li class="breadcrumb-item active" aria-current="page">Floor Plans</li>
-            </ol>
-        </nav>
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
@@ -86,5 +79,5 @@
             </div>
         </div>
     </div>
-</div>
+
 @include('layouts.partials.footer')

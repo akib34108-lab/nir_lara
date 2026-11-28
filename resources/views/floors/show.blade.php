@@ -3,22 +3,6 @@
 @include('layouts.partials.sidebar')
 <div class="main-panel">
     <div class="content-wrapper">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('sites.index') }}">Sites</a></li>
-                @if($floor->building?->site)
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('sites.show', $floor->building->site) }}">{{ $floor->building->site->project_name }}</a>
-                    </li>
-                @endif
-                @if($floor->building)
-                    <li class="breadcrumb-item"><a href="{{ route('buildings.show', $floor->building) }}">{{ $floor->building->name }}</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('buildings.show', $floor->building) }}#building-floors">Floors</a></li>
-                @endif
-                <li class="breadcrumb-item active" aria-current="page">{{ $floor->name }}</li>
-            </ol>
-        </nav>
-
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
@@ -41,7 +25,6 @@
                 <div class="d-flex align-items-center flex-wrap">
                     <h3 class="mb-1 mr-3">{{ $floor->name }}</h3>
                     <span class="badge badge-primary mr-2">Floor {{ $floor->floor_number }}</span>
-                    <span class="badge badge-{{ $floor->statusBadgeColor() }}">{{ $floor->statusLabel() }}</span>
                 </div>
                 <p class="text-muted mt-2 mb-0">
                     {{ $floor->building?->name ?? 'Building unavailable' }}
@@ -53,12 +36,12 @@
             <div class="col-md-4 d-flex justify-content-md-end mt-3 mt-md-0">
                 @if($floor->building)
                     <a href="{{ route('buildings.show', $floor->building) }}#building-floors" class="btn btn-light mr-2">
-                        <i class="ti-arrow-left"></i> Back to Floors
+                        <i class="ti-arrow-left"></i> Back
                     </a>
                 @endif
                 @can('floors-edit')
                     <a href="{{ route('floors.edit', $floor) }}" class="btn btn-primary">
-                        <i class="ti-settings"></i> Edit Floor Configuration
+                        <i class="ti-pencil"></i> Edit
                     </a>
                 @endcan
             </div>
@@ -93,8 +76,8 @@
                                                 <td><span class="badge badge-{{ $floor->statusBadgeColor() }}">{{ $floor->statusLabel() }}</span></td>
                                             </tr>
                                             <tr>
-                                                <th>Description</th>
-                                                <td>
+                                                <th style="white-space: nowrap;">Description</th>
+                                                <td style="white-space: normal; overflow: visible; word-break: break-word;">
                                                     @if($floor->description)
                                                         {!! nl2br(e($floor->description)) !!}
                                                     @else
@@ -122,20 +105,91 @@
                                                 <td>{{ $floor->common_area !== null ? number_format((float) $floor->common_area, 2).' '.$floor->floor_area_unit : 'N/A' }}</td>
                                             </tr>
                                             <tr>
-                                                <th>Notes</th>
-                                                <td>{{ $floor->notes ?: 'N/A' }}</td>
+                                                <th style="white-space: nowrap;">Notes</th>
+                                                <td style="white-space: normal; overflow: visible; word-break: break-word;">
+                                                    @if($floor->notes)
+                                                        {!! nl2br(e($floor->notes)) !!}
+                                                    @else
+                                                        <span class="text-muted">N/A</span>
+                                                    @endif
+                                                </td>
                                             </tr>
                                         </tbody>
                                     </table>
                                 </div>
-                                @if($floor->configuration)
-                                    <h5 class="mt-3">Configuration Details</h5>
-                                    <pre class="border rounded p-3">{{ json_encode($floor->configuration, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) }}</pre>
-                                @else
-                                    <p class="text-muted">No additional configuration details.</p>
-                                @endif
                             </div>
                         </div>
+
+                        @php
+                            $totalFlatArea = $floor->flats->sum(fn ($flat) => (float) ($flat->area ?? 0));
+                            $totalCommonArea = $floor->commonAreas->sum(fn ($area) => (float) ($area->area ?? 0));
+                        @endphp
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h4 class="card-title">Flat &amp; Common Area Summary</h4>
+                                <div class="row mb-3">
+                                    <div class="col-md-3"><small class="text-muted">Total Flats</small><h5>{{ $floor->flats->count() }}</h5></div>
+                                    <div class="col-md-3"><small class="text-muted">Total Flat Area</small><h5>{{ number_format($totalFlatArea, 2) }} {{ $floor->floor_area_unit }}</h5></div>
+                                    <div class="col-md-3"><small class="text-muted">Total Common Area</small><h5>{{ number_format($totalCommonArea, 2) }} {{ $floor->floor_area_unit }}</h5></div>
+                                    <div class="col-md-3"><small class="text-muted">Remaining Area</small><h5>{{ $floor->floor_area !== null ? number_format((float) $floor->floor_area - $totalFlatArea - $totalCommonArea, 2).' '.$floor->floor_area_unit : 'N/A' }}</h5></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @foreach($floor->flats as $flat)
+                            <div class="card mb-3">
+                                <div class="card-header d-flex justify-content-between">
+                                    <strong>{{ $flat->flat_number }}{{ $flat->name ? ' - '.$flat->name : '' }}</strong>
+                                    <span>{{ number_format((float) $flat->area, 2) }} {{ $flat->area_unit }}</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Type:</strong> {{ $flat->flat_type ?: 'N/A' }}</p>
+                                            <p class="mb-1"><strong>Status:</strong> {{ $flat->status }}</p>
+                                            <p class="mb-0"><strong>Description:</strong> {{ $flat->description ?: 'N/A' }}</p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <p class="mb-1"><strong>Bedrooms:</strong> {{ $flat->bedroom_count }} (Master: {{ $flat->master_bedroom_count }})</p>
+                                            <p class="mb-1"><strong>Bathrooms:</strong> {{ $flat->bathroom_count }} | <strong>Balconies:</strong> {{ $flat->balcony_count }}</p>
+                                            <p class="mb-0"><strong>Kitchen/Living/Dining:</strong> {{ $flat->kitchen_count }}/{{ $flat->living_room_count }}/{{ $flat->dining_room_count }}</p>
+                                        </div>
+                                    </div>
+                                    @if($flat->rooms->isNotEmpty())
+                                        <div class="table-responsive mt-3">
+                                            <table class="table table-sm table-bordered">
+                                                <thead><tr><th>Room</th><th>Type</th><th>Dimensions</th><th>Area</th><th>Features</th></tr></thead>
+                                                <tbody>
+                                                @foreach($flat->rooms as $room)
+                                                    <tr>
+                                                        <td>{{ $room->name ?: 'Room' }}</td>
+                                                        <td>{{ str_replace('_', ' ', ucfirst($room->room_type)) }}</td>
+                                                        <td>{{ $room->length && $room->width ? $room->length.' x '.$room->width : 'N/A' }}</td>
+                                                        <td>{{ $room->area !== null ? number_format((float) $room->area, 2).' '.$room->area_unit : 'N/A' }}</td>
+                                                        <td>Attached Bath: {{ $room->attached_bathroom ? 'Yes' : 'No' }}; Doors: {{ $room->door_count }}; Windows: {{ $room->window_count }}</td>
+                                                    </tr>
+                                                @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+
+                        @if($floor->commonAreas->isNotEmpty())
+                            <h4 class="card-title mt-3">Common Areas</h4>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead><tr><th>Name</th><th>Type</th><th>Dimensions</th><th>Area</th><th>Description</th></tr></thead>
+                                    <tbody>
+                                    @foreach($floor->commonAreas as $area)
+                                        <tr><td>{{ $area->name }}</td><td>{{ $area->area_type }}</td><td>{{ $area->length && $area->width ? $area->length.' x '.$area->width : 'N/A' }}</td><td>{{ number_format((float) $area->area, 2).' '.$area->area_unit }}</td><td>{{ $area->description ?: 'N/A' }}</td></tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
 
                         <div class="row mt-4">
                             <div class="col-md-6">
@@ -155,12 +209,6 @@
                                 <h4 class="card-title mb-1">Floor Plans</h4>
                                 <p class="card-description mb-0">Plans uploaded for {{ $floor->name }}.</p>
                             </div>
-                            @can('floor-plans-create')
-                                <a href="{{ route('floor-plans.create', ['building_id' => $floor->building_id, 'floor_id' => $floor->id]) }}"
-                                   class="btn btn-primary">
-                                    <i class="ti-plus"></i> Upload Floor Plan
-                                </a>
-                            @endcan
                         </div>
                         @can('floor-plans-list')
                             @include('floor-plans._table', ['floorPlans' => $floor->floorPlans])
@@ -172,5 +220,5 @@
             </div>
         </div>
     </div>
-</div>
+
 @include('layouts.partials.footer')

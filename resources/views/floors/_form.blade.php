@@ -82,11 +82,3 @@
     <textarea id="notes" name="notes" rows="3" class="form-control">{{ old('notes', $floor->notes) }}</textarea>
     @error('notes')<small class="text-danger">{{ $message }}</small>@enderror
 </div>
-
-<div class="form-group">
-    <label for="configuration">Configuration Details (JSON)</label>
-    <textarea id="configuration" name="configuration" rows="6" class="form-control"
-              placeholder='{"key": "value"}'>{{ old('configuration', $configurationValue) }}</textarea>
-    <small class="form-text text-muted">Optional JSON object or array for flexible floor details.</small>
-    @error('configuration')<small class="text-danger">{{ $message }}</small>@enderror
-</div>

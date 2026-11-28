@@ -3,14 +3,6 @@
 @include('layouts.partials.sidebar')
 <div class="main-panel">
     <div class="content-wrapper">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('amenities.index') }}">Amenities &amp; Facilities</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('amenities.show', $amenity) }}">{{ $amenity->name }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Edit</li>
-            </ol>
-        </nav>
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Edit Amenity</h4>
@@ -24,5 +16,4 @@
             </div>
         </div>
     </div>
-</div>
 @include('layouts.partials.footer')

@@ -4,6 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Building;
 use App\Models\Floor;
+use App\Models\FloorCommonArea;
+use App\Models\FloorFlat;
+use App\Models\FloorFlatRoom;
 use App\Models\FloorPlan;
 use App\Models\Sites;
 use App\Models\User;
@@ -243,6 +246,222 @@ class FloorPlanManagementTest extends TestCase
             ->assertSessionHas('success', 'Floor plan deleted successfully.');
 
         $this->assertSoftDeleted('floor_plans', ['id' => $missingFilePlan->id]);
+    }
+
+    public function test_floor_plan_upload_saves_floor_wise_flats_rooms_and_common_areas(): void
+    {
+        Storage::fake('local');
+        $user = $this->createUserWithRole('Super Admin');
+        $building = $this->createBuilding('BLD-FP-CONFIG');
+        $floor = $this->createFloor($building);
+
+        $this->actingAs($user)->post(route('floor-plans.store'), [
+            'title' => 'Configured Ground Floor',
+            'building_id' => $building->id,
+            'floor_id' => $floor->id,
+            'floor_area_summary' => 150,
+            'file' => UploadedFile::fake()->createWithContent('configured.pdf', "%PDF-1.4\nConfigured"),
+            'flats' => [
+                [
+                    'flat_number' => 'A-101',
+                    'name' => 'Corner Flat',
+                    'flat_type' => '3BHK',
+                    'area' => 100,
+                    'area_unit' => 'sqft',
+                    'bedroom_count' => 2,
+                    'master_bedroom_count' => 1,
+                    'bathroom_count' => 2,
+                    'balcony_count' => 1,
+                    'kitchen_count' => 1,
+                    'living_room_count' => 1,
+                    'dining_room_count' => 1,
+                    'status' => 'planned',
+                    'rooms' => [
+                        [
+                            'name' => 'Master Bedroom',
+                            'room_type' => 'master_bedroom',
+                            'length' => 12,
+                            'width' => 10,
+                            'area_unit' => 'sqft',
+                            'attached_bathroom' => true,
+                            'door_count' => 1,
+                            'window_count' => 2,
+                        ],
+                    ],
+                ],
+            ],
+            'common_areas' => [
+                [
+                    'name' => 'Main Corridor',
+                    'area_type' => 'corridor',
+                    'length' => 10,
+                    'width' => 5,
+                    'area' => 50,
+                    'area_unit' => 'sqft',
+                ],
+            ],
+        ])->assertRedirect(route('floors.show', $floor));
+
+        $flat = FloorFlat::query()->where('floor_id', $floor->id)->where('flat_number', 'A-101')->firstOrFail();
+        $this->assertDatabaseHas('floor_flat_rooms', [
+            'flat_id' => $flat->id,
+            'room_type' => 'master_bedroom',
+            'area' => 120,
+        ]);
+        $this->assertDatabaseHas('floor_common_areas', [
+            'floor_id' => $floor->id,
+            'name' => 'Main Corridor',
+            'area' => 50,
+        ]);
+        $commonArea = FloorCommonArea::query()->where('floor_id', $floor->id)->firstOrFail();
+
+        $plan = FloorPlan::query()->firstOrFail();
+        $this->actingAs($user)->put(route('floor-plans.update', $plan), [
+            'title' => 'Configured Ground Floor Updated',
+            'building_id' => $building->id,
+            'floor_id' => $floor->id,
+            'floor_area_summary' => 150,
+            'flats' => [
+                [
+                    'id' => $flat->id,
+                    '_delete' => false,
+                    'flat_number' => 'A-101',
+                    'name' => 'Updated Flat',
+                    'area' => 100,
+                    'area_unit' => 'sqft',
+                    'status' => 'active',
+                    'rooms' => [
+                        [
+                            'name' => 'Living Room',
+                            'room_type' => 'living_room',
+                            'length' => 15,
+                            'width' => 10,
+                            'area_unit' => 'sqft',
+                            'door_count' => 1,
+                            'window_count' => 2,
+                        ],
+                    ],
+                ],
+            ],
+            'common_areas' => [
+                [
+                    'id' => $commonArea->id,
+                    '_delete' => false,
+                    'name' => 'Main Corridor',
+                    'area_type' => 'corridor',
+                    'length' => 10,
+                    'width' => 5,
+                    'area' => 50,
+                    'area_unit' => 'sqft',
+                ],
+            ],
+        ])->assertRedirect(route('floors.show', $floor));
+
+        $flat->refresh();
+        $this->assertSame('Updated Flat', $flat->name);
+        $this->assertSame(2, FloorFlatRoom::query()->where('flat_id', $flat->id)->count());
+    }
+
+    public function test_building_and_floor_information_is_available_in_configuration_form(): void
+    {
+        $user = $this->createUserWithRole('Super Admin');
+        $building = $this->createBuilding('BLD-FP-SUMMARY');
+        $basement = $building->floors()->create([
+            'name' => 'Basement One',
+            'floor_number' => -1,
+            'floor_type' => 'basement',
+            'floor_area_unit' => 'sqft',
+            'configuration' => ['parking_spaces' => 3],
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('floor-plans.create', ['building_id' => $building->id, 'floor_id' => $basement->id]))
+            ->assertOk()
+            ->assertSee('Building Total Floors')
+            ->assertSee('Building Total Flats')
+            ->assertSee('Basement Floors')
+            ->assertSee('Total Parking Spaces')
+            ->assertSee('Configured Parking Spaces')
+            ->assertSee('data-total-flats="8"', false)
+            ->assertSee('data-parking-spaces="3"', false)
+            ->assertSee('Basement One');
+    }
+
+    public function test_building_flat_and_basement_parking_limits_are_enforced(): void
+    {
+        Storage::fake('local');
+        $user = $this->createUserWithRole('Super Admin');
+        $building = $this->createBuilding('BLD-FP-LIMITS');
+        $building->update(['total_flats' => 1, 'parking_capacity' => 8]);
+        $floor = $this->createFloor($building);
+        $basement = $building->floors()->create([
+            'name' => 'Basement One',
+            'floor_number' => -1,
+            'floor_type' => 'basement',
+            'floor_area_unit' => 'sqft',
+            'configuration' => ['parking_spaces' => 5],
+            'status' => 'active',
+        ]);
+        $otherBasement = $building->floors()->create([
+            'name' => 'Basement Two',
+            'floor_number' => -2,
+            'floor_type' => 'basement',
+            'floor_area_unit' => 'sqft',
+            'status' => 'active',
+        ]);
+        $existingFlat = $floor->flats()->create([
+            'flat_number' => 'A-101',
+            'area_unit' => 'sqft',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('floor-plans.store'), [
+                'title' => 'Too Many Flats',
+                'building_id' => $building->id,
+                'floor_id' => $floor->id,
+                'file' => UploadedFile::fake()->createWithContent('too-many.pdf', "%PDF-1.4\nDrawing"),
+                'flats' => [
+                    [
+                        'id' => $existingFlat->id,
+                        'flat_number' => 'A-101',
+                        'area_unit' => 'sqft',
+                    ],
+                    [
+                        'flat_number' => 'A-102',
+                        'area_unit' => 'sqft',
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors('flats');
+
+        $this->assertDatabaseCount('floor_plans', 0);
+        $this->assertDatabaseCount('floor_flats', 1);
+
+        $this->actingAs($user)
+            ->post(route('floor-plans.store'), [
+                'title' => 'Basement Parking Allocation',
+                'building_id' => $building->id,
+                'floor_id' => $otherBasement->id,
+                'parking_spaces' => 3,
+                'file' => UploadedFile::fake()->createWithContent('parking.pdf', "%PDF-1.4\nDrawing"),
+            ])
+            ->assertRedirect(route('floors.show', $otherBasement));
+
+        $this->assertSame(3, $otherBasement->fresh()->configuration['parking_spaces']);
+        $plan = FloorPlan::query()->where('floor_id', $otherBasement->id)->firstOrFail();
+        $this->actingAs($user)
+            ->put(route('floor-plans.update', $plan), [
+                'title' => 'Parking Allocation Over Capacity',
+                'building_id' => $building->id,
+                'floor_id' => $otherBasement->id,
+                'parking_spaces' => 4,
+            ])
+            ->assertSessionHasErrors('parking_spaces');
+
+        $this->assertDatabaseCount('floor_plans', 1);
+        $this->assertSame(3, $otherBasement->fresh()->configuration['parking_spaces']);
+        $this->assertSame(5, $basement->fresh()->configuration['parking_spaces']);
     }
 
     public function test_shareholder_can_view_but_not_upload_edit_or_delete_floor_plans(): void

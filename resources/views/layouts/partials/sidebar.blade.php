@@ -71,8 +71,8 @@
       @php($isPropertyRoute = request()->routeIs('buildings.*', 'floors.*', 'amenities.*', 'floor-plans.*'))
       <li class="nav-item">
         <a class="nav-link {{ $isPropertyRoute ? 'active' : '' }}" data-toggle="collapse" href="#property-management-menu" aria-expanded="{{ $isPropertyRoute ? 'true' : 'false' }}" aria-controls="property-management-menu">
-          <i class="icon-home menu-icon"></i>
-          <span class="menu-title">Property Management</span>
+          <i class="ti-home menu-icon"></i>
+          <span class="menu-title">Property Manage</span>
           <i class="menu-arrow"></i>
         </a>
         <div class="collapse {{ $isPropertyRoute ? 'show' : '' }}" id="property-management-menu">

@@ -74,6 +74,16 @@ class Floor extends Model
         return $this->hasMany(FloorPlan::class)->latest();
     }
 
+    public function flats(): HasMany
+    {
+        return $this->hasMany(FloorFlat::class, 'floor_id')->orderBy('id');
+    }
+
+    public function commonAreas(): HasMany
+    {
+        return $this->hasMany(FloorCommonArea::class, 'floor_id')->orderBy('id');
+    }
+
     public function statusLabel(): string
     {
         return self::STATUS_LABELS[$this->status] ?? ucfirst(str_replace('_', ' ', $this->status ?? ''));

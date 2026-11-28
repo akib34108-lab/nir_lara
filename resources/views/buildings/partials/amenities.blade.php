@@ -1,13 +1,3 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h4 class="card-title mb-1">Amenities &amp; Facilities</h4>
-        <p class="card-description mb-0">Assigned amenities are grouped by category.</p>
-    </div>
-    @can('amenities-list')
-        <a href="{{ route('amenities.index') }}" class="btn btn-light">Manage Amenities</a>
-    @endcan
-</div>
-
 @if($building->amenities->isEmpty())
     <div class="alert alert-info">No amenities have been assigned to this building.</div>
 @else
@@ -15,7 +5,15 @@
         <h5 class="mt-4">{{ $category }}</h5>
         <div class="table-responsive">
             <table class="table table-hover">
-                <thead><tr><th>Amenity</th><th>Status</th><th>Quantity</th><th>Notes</th><th>Actions</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>Amenity</th>
+                        <th>Status</th>
+                        <th>Quantity</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
                 <tbody>
                     @foreach($amenities as $amenity)
                         <tr>
@@ -40,20 +38,23 @@
                                                    aria-label="Notes for {{ $amenity->name }}"
                                                    value="{{ is_array(old('notes')) ? old('notes.'.$amenity->id, $amenity->pivot->notes) : old('notes', $amenity->pivot->notes) }}" placeholder="Notes">
                                         </div>
-                                        <div class="col-md-3">
-                                            <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
-                                        </div>
                                     </form>
                                 @else
                                     {{ $amenity->pivot->quantity ?? 'N/A' }}
                                     <span class="text-muted">{{ $amenity->pivot->notes }}</span>
                                 @endcan
                             </td>
-                            <td>
+                            <td class="text-nowrap">
+                                <button type="submit" class="btn btn-sm btn-outline-primary" title="Update">
+                                    <i class="ti-save"></i>
+                                </button>
+
                                 @can('buildings-edit')
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal"
-                                            data-target="#removeBuildingAmenityModal{{ $building->id }}{{ $amenity->id }}">
-                                        Remove
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                            data-toggle="modal"
+                                            data-target="#removeBuildingAmenityModal{{ $building->id }}{{ $amenity->id }}"
+                                            title="Remove">
+                                        <i class="ti-trash"></i>
                                     </button>
                                 @endcan
                             </td>

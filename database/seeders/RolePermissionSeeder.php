@@ -35,6 +35,8 @@ class RolePermissionSeeder extends Seeder
         // Create Permissions
 
         $modules = [
+            'central' => ['view'],
+
             'dashboard' => ['view'],
 
             'users' => ['list', 'create', 'edit', 'delete'],

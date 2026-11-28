@@ -3,13 +3,6 @@
 @include('layouts.partials.sidebar')
 <div class="main-panel">
     <div class="content-wrapper">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('buildings.index') }}">Buildings</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Edit {{ $building->name }}</li>
-            </ol>
-        </nav>
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Edit Building</h4>
@@ -125,5 +118,5 @@
             </div>
         </div>
     </div>
-</div>
+
 @include('layouts.partials.footer')

@@ -91,7 +91,13 @@ class FloorController extends Controller
 
     public function show(Floor $floor): View
     {
-        $floor->load(['building.site', 'floorPlans.floor', 'floorPlans.building.site']);
+        $floor->load([
+            'building.site',
+            'floorPlans.floor',
+            'floorPlans.building.site',
+            'flats.rooms',
+            'commonAreas',
+        ]);
 
         return view('floors.show', compact('floor'));
     }

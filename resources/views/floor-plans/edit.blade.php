@@ -21,7 +21,7 @@
                     @method('PUT')
                     @include('floor-plans._form')
                     <button type="submit" class="btn btn-primary mr-2"><i class="ti-save"></i> Save Changes</button>
-                    <a href="{{ route('floors.show', $floorPlan->floor_id) }}" class="btn btn-light">Cancel</a>
+                    <a href="{{ route('floors.show', $selectedFloorId ?? $floorPlan->floor_id) }}" class="btn btn-light">Cancel</a>
                 </form>
             </div>
         </div>

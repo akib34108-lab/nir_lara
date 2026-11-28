@@ -28,14 +28,6 @@
 </div>
 
 <div class="form-group">
-    <label for="icon">Themify icon class <span class="text-muted">(optional)</span></label>
-    <input id="icon" name="icon" type="text" class="form-control" maxlength="100"
-           value="{{ old('icon', $amenity->icon) }}" placeholder="ti-star">
-    <small class="form-text text-muted">Use an existing Themify icon class, for example ti-star.</small>
-    @error('icon')<small class="text-danger">{{ $message }}</small>@enderror
-</div>
-
-<div class="form-group">
     <label for="description">Description</label>
     <textarea id="description" name="description" rows="4" class="form-control">{{ old('description', $amenity->description) }}</textarea>
     @error('description')<small class="text-danger">{{ $message }}</small>@enderror

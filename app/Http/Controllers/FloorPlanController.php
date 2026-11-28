@@ -6,6 +6,9 @@ use App\Http\Requests\StoreFloorPlanRequest;
 use App\Http\Requests\UpdateFloorPlanRequest;
 use App\Models\Building;
 use App\Models\Floor;
+use App\Models\FloorCommonArea;
+use App\Models\FloorFlat;
+use App\Models\FloorFlatRoom;
 use App\Models\FloorPlan;
 use App\Models\Sites;
 use Illuminate\Contracts\View\View;
@@ -16,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Throwable;
 
@@ -79,9 +83,20 @@ class FloorPlanController extends Controller
             $selection['building_id'] = $floor->building_id;
         }
 
+        $floorPlan = new FloorPlan($selection);
+        if (isset($selection['floor_id'])) {
+            $floorPlan->setRelation('floor', Floor::query()
+                ->with(['flats.rooms', 'commonAreas'])
+                ->findOrFail($selection['floor_id']));
+        }
+
         return view('floor-plans.create', array_merge(
             $this->formOptions(),
-            ['floorPlan' => new FloorPlan($selection)]
+            compact('floorPlan'),
+            [
+                'selectedBuildingId' => $selection['building_id'] ?? null,
+                'selectedFloorId' => $selection['floor_id'] ?? null,
+            ]
         ));
     }
 
@@ -90,6 +105,11 @@ class FloorPlanController extends Controller
         $attributes = $request->validated();
         $upload = $request->file('file');
         unset($attributes['file']);
+        $flatData = $attributes['flats'] ?? [];
+        $commonAreaData = $attributes['common_areas'] ?? [];
+        $floorAreaSummary = $attributes['floor_area_summary'] ?? null;
+        $parkingSpaces = $attributes['parking_spaces'] ?? null;
+        unset($attributes['flats'], $attributes['common_areas'], $attributes['floor_area_summary'], $attributes['parking_spaces']);
 
         if (! $upload instanceof UploadedFile) {
             throw new RuntimeException('A floor plan file is required.');
@@ -98,7 +118,12 @@ class FloorPlanController extends Controller
         $storedFile = $this->storeFile($upload, (int) $attributes['building_id']);
 
         try {
-            $floorPlan = DB::transaction(fn () => FloorPlan::create(array_merge($attributes, $storedFile)));
+            $floorPlan = DB::transaction(function () use ($attributes, $storedFile, $flatData, $commonAreaData, $floorAreaSummary, $parkingSpaces) {
+                $plan = FloorPlan::create(array_merge($attributes, $storedFile));
+                $this->syncFloorConfiguration((int) $attributes['floor_id'], $flatData, $commonAreaData, $floorAreaSummary, $parkingSpaces);
+
+                return $plan;
+            });
         } catch (Throwable $exception) {
             $this->removeStoredFileOrFail($storedFile['file_path']);
             throw $exception;
@@ -109,13 +134,36 @@ class FloorPlanController extends Controller
             ->with('success', 'Floor plan uploaded successfully.');
     }
 
-    public function edit(FloorPlan $floorPlan): View
+    public function edit(Request $request, FloorPlan $floorPlan): View
     {
-        $floorPlan->load(['building', 'floor']);
+        $selection = $request->validate([
+            'building_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('buildings', 'id')->where(fn ($query) => $query->whereNull('deleted_at')),
+            ],
+            'floor_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('floors', 'id')->where(fn ($query) => $query->whereNull('deleted_at')),
+            ],
+        ]);
+        $floorId = $selection['floor_id'] ?? $floorPlan->floor_id;
+        $floor = Floor::query()->with(['building', 'flats.rooms', 'commonAreas'])->findOrFail($floorId);
+        if (isset($selection['building_id']) && (int) $selection['building_id'] !== $floor->building_id) {
+            abort(404);
+        }
+
+        $floorPlan->setRelation('building', $floor->building);
+        $floorPlan->setRelation('floor', $floor);
 
         return view('floor-plans.edit', array_merge(
             $this->formOptions(),
-            compact('floorPlan')
+            compact('floorPlan'),
+            [
+                'selectedBuildingId' => $floor->building_id,
+                'selectedFloorId' => $floor->id,
+            ]
         ));
     }
 
@@ -124,6 +172,11 @@ class FloorPlanController extends Controller
         $attributes = $request->validated();
         $upload = $request->file('file');
         unset($attributes['file']);
+        $flatData = $attributes['flats'] ?? [];
+        $commonAreaData = $attributes['common_areas'] ?? [];
+        $floorAreaSummary = $attributes['floor_area_summary'] ?? null;
+        $parkingSpaces = $attributes['parking_spaces'] ?? null;
+        unset($attributes['flats'], $attributes['common_areas'], $attributes['floor_area_summary'], $attributes['parking_spaces']);
 
         if ($upload !== null && ! $upload instanceof UploadedFile) {
             throw new RuntimeException('The replacement floor plan file is invalid.');
@@ -146,7 +199,10 @@ class FloorPlanController extends Controller
             }
 
             try {
-                DB::transaction(fn () => $floorPlan->update($attributes));
+                DB::transaction(function () use ($floorPlan, $attributes, $flatData, $commonAreaData, $floorAreaSummary, $parkingSpaces) {
+                    $floorPlan->update($attributes);
+                    $this->syncFloorConfiguration((int) $attributes['floor_id'], $flatData, $commonAreaData, $floorAreaSummary, $parkingSpaces);
+                });
             } catch (Throwable $exception) {
                 if ($relocatedPath !== null && ! $disk->move($relocatedPath, $oldPath)) {
                     throw new RuntimeException('The floor plan file could not be restored after the metadata update failed.', 0, $exception);
@@ -172,7 +228,10 @@ class FloorPlanController extends Controller
         $storedFile = $this->storeFile($upload, (int) $attributes['building_id']);
 
         try {
-            DB::transaction(fn () => $floorPlan->update(array_merge($attributes, $storedFile)));
+            DB::transaction(function () use ($floorPlan, $attributes, $storedFile, $flatData, $commonAreaData, $floorAreaSummary, $parkingSpaces) {
+                $floorPlan->update(array_merge($attributes, $storedFile));
+                $this->syncFloorConfiguration((int) $attributes['floor_id'], $flatData, $commonAreaData, $floorAreaSummary, $parkingSpaces);
+            });
         } catch (Throwable $exception) {
             $this->removeStoredFileOrFail($storedFile['file_path']);
             throw $exception;
@@ -236,18 +295,237 @@ class FloorPlanController extends Controller
 
     private function formOptions(): array
     {
+        $floors = Floor::query()
+            ->with('building:id,name,code')
+            ->withCount('flats')
+            ->select('id', 'building_id', 'name', 'floor_number', 'floor_type', 'floor_area', 'floor_area_unit', 'configuration')
+            ->orderBy('floor_number')
+            ->get();
+        $buildings = Building::query()
+            ->with('site:id,project_name,project_code')
+            ->select('id', 'site_id', 'name', 'code', 'total_floors', 'total_flats', 'basement_count', 'parking_capacity')
+            ->orderBy('name')
+            ->get();
+
+        foreach ($buildings as $building) {
+            $buildingFloors = $floors->where('building_id', $building->id);
+            $building->setAttribute('configured_flat_count', (int) $buildingFloors->sum('flats_count'));
+            $building->setAttribute('configured_parking_count', (int) $buildingFloors->sum(
+                fn (Floor $floor) => (int) ($floor->configuration['parking_spaces'] ?? 0)
+            ));
+        }
+
         return [
-            'buildings' => Building::query()
-                ->with('site:id,project_name,project_code')
-                ->select('id', 'site_id', 'name', 'code')
-                ->orderBy('name')
-                ->get(),
-            'floors' => Floor::query()
-                ->with('building:id,name,code')
-                ->select('id', 'building_id', 'name', 'floor_number')
-                ->orderBy('floor_number')
-                ->get(),
+            'buildings' => $buildings,
+            'floors' => $floors,
         ];
+    }
+
+    private function syncFloorConfiguration(
+        int $floorId,
+        array $flatData,
+        array $commonAreaData,
+        mixed $floorAreaSummary = null,
+        mixed $parkingSpaces = null
+    ): void {
+        $floor = Floor::query()->findOrFail($floorId);
+
+        $submittedNumbers = collect($flatData)
+            ->reject(fn ($flat) => ! empty($flat['_delete']))
+            ->pluck('flat_number')
+            ->filter(fn ($number) => is_string($number) && trim($number) !== '')
+            ->map(fn ($number) => trim($number));
+
+        if ($submittedNumbers->duplicates()->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'flats' => 'Each flat number must be unique within the selected floor.',
+            ]);
+        }
+
+        $activeExistingNumbers = $floor->flats()
+            ->pluck('flat_number')
+            ->map(fn ($number) => trim((string) $number));
+
+        foreach ($submittedNumbers as $number) {
+            $matchingFlat = collect($flatData)->first(function ($flat) use ($number) {
+                return ! empty($flat['flat_number']) && trim((string) $flat['flat_number']) === $number;
+            });
+            $submittedId = $matchingFlat['id'] ?? null;
+
+            $duplicate = $activeExistingNumbers->filter(fn ($existing) => $existing === $number)->count();
+            if ($duplicate > 1 || ($duplicate === 1 && empty($submittedId))) {
+                throw ValidationException::withMessages([
+                    'flats' => 'Flat number '.$number.' already exists on this floor.',
+                ]);
+            }
+        }
+
+        foreach ($flatData as $flatInput) {
+            if (! empty($flatInput['_delete'])) {
+                if (! empty($flatInput['id'])) {
+                    $flat = FloorFlat::query()
+                        ->where('floor_id', $floorId)
+                        ->find((int) $flatInput['id']);
+                    if ($flat) {
+                        $flat->delete();
+                    }
+                }
+
+                continue;
+            }
+
+            $attributes = collect($flatInput)->except(['id', '_delete', 'rooms'])->mapWithKeys(function ($value, $key) {
+                return [$key => $value === '' ? null : $value];
+            })->all();
+            $attributes['area_unit'] = $attributes['area_unit'] ?? 'sqft';
+            foreach ([
+                'bedroom_count', 'master_bedroom_count', 'bathroom_count', 'balcony_count',
+                'kitchen_count', 'living_room_count', 'dining_room_count',
+            ] as $countField) {
+                $attributes[$countField] = (int) ($attributes[$countField] ?? 0);
+            }
+
+            $flat = null;
+            if (! empty($flatInput['id'])) {
+                $flat = FloorFlat::query()
+                    ->where('floor_id', $floorId)
+                    ->find((int) $flatInput['id']);
+            }
+
+            if ($flat) {
+                $flat->update($attributes);
+            } else {
+                $flat = $floor->flats()->create($attributes);
+            }
+
+            foreach (($flatInput['rooms'] ?? []) as $roomInput) {
+                if (! empty($roomInput['_delete'])) {
+                    if (! empty($roomInput['id'])) {
+                        $room = FloorFlatRoom::query()
+                            ->where('flat_id', $flat->id)
+                            ->find((int) $roomInput['id']);
+                        if ($room) {
+                            $room->delete();
+                        }
+                    }
+
+                    continue;
+                }
+
+                $length = isset($roomInput['length']) && $roomInput['length'] !== '' ? (float) $roomInput['length'] : null;
+                $width = isset($roomInput['width']) && $roomInput['width'] !== '' ? (float) $roomInput['width'] : null;
+                $manualArea = isset($roomInput['area']) && $roomInput['area'] !== '' ? (float) $roomInput['area'] : null;
+                $calculatedArea = ($length !== null && $width !== null) ? $length * $width : null;
+                $area = $manualArea ?? $calculatedArea;
+
+                $roomAttributes = collect($roomInput)
+                    ->except(['id', '_delete'])
+                    ->map(fn ($value) => $value === '' ? null : $value)
+                    ->all();
+                $roomAttributes['area'] = $area;
+                $roomAttributes['area_unit'] = $roomAttributes['area_unit'] ?? 'sqft';
+                $roomAttributes['attached_bathroom'] = (bool) ($roomAttributes['attached_bathroom'] ?? false);
+                $roomAttributes['door_count'] = (int) ($roomAttributes['door_count'] ?? 0);
+                $roomAttributes['window_count'] = (int) ($roomAttributes['window_count'] ?? 0);
+                $roomAttributes['properties'] = $roomAttributes['properties'] ?? null;
+
+                $room = null;
+                if (! empty($roomInput['id'])) {
+                    $room = FloorFlatRoom::query()
+                        ->where('flat_id', $flat->id)
+                        ->find((int) $roomInput['id']);
+                }
+
+                if ($room) {
+                    $room->update($roomAttributes);
+                } else {
+                    $flat->rooms()->create($roomAttributes);
+                }
+            }
+        }
+
+        foreach ($commonAreaData as $areaInput) {
+            if (! empty($areaInput['_delete'])) {
+                if (! empty($areaInput['id'])) {
+                    $area = FloorCommonArea::query()
+                        ->where('floor_id', $floorId)
+                        ->find((int) $areaInput['id']);
+                    if ($area) {
+                        $area->delete();
+                    }
+                }
+
+                continue;
+            }
+
+            $length = isset($areaInput['length']) && $areaInput['length'] !== '' ? (float) $areaInput['length'] : null;
+            $width = isset($areaInput['width']) && $areaInput['width'] !== '' ? (float) $areaInput['width'] : null;
+            $manualArea = isset($areaInput['area']) && $areaInput['area'] !== '' ? (float) $areaInput['area'] : null;
+            $areaAttributes = collect($areaInput)
+                ->except(['id', '_delete'])
+                ->map(fn ($value) => $value === '' ? null : $value)
+                ->all();
+            $areaAttributes['area'] = $manualArea ?? (($length !== null && $width !== null) ? $length * $width : null);
+            $areaAttributes['area_unit'] = $areaAttributes['area_unit'] ?? 'sqft';
+
+            $area = null;
+            if (! empty($areaInput['id'])) {
+                $area = FloorCommonArea::query()
+                    ->where('floor_id', $floorId)
+                    ->find((int) $areaInput['id']);
+            }
+
+            if ($area) {
+                $area->update($areaAttributes);
+            } else {
+                $floor->commonAreas()->create($areaAttributes);
+            }
+        }
+
+        $building = $floor->building;
+        $configuredFlats = (int) $building->floors()->withCount('flats')->get()->sum('flats_count');
+        if ($configuredFlats > (int) $building->total_flats) {
+            throw ValidationException::withMessages([
+                'flats' => 'Configured flats cannot exceed the building total of '.$building->total_flats.'.',
+            ]);
+        }
+
+        if ($parkingSpaces !== null && $parkingSpaces !== '') {
+            if ($floor->floor_type !== 'basement' && (int) $parkingSpaces > 0) {
+                throw ValidationException::withMessages([
+                    'parking_spaces' => 'Parking spaces can only be allocated to a basement floor.',
+                ]);
+            }
+
+            $otherFloorParking = $building->floors()
+                ->whereKeyNot($floor->id)
+                ->get()
+                ->sum(fn (Floor $otherFloor) => (int) ($otherFloor->configuration['parking_spaces'] ?? 0));
+            if ($otherFloorParking + (int) $parkingSpaces > (int) $building->parking_capacity) {
+                throw ValidationException::withMessages([
+                    'parking_spaces' => 'Configured parking spaces cannot exceed the building capacity of '.$building->parking_capacity.'.',
+                ]);
+            }
+
+            $configuration = $floor->configuration ?? [];
+            $configuration['parking_spaces'] = (int) $parkingSpaces;
+            $floor->configuration = $configuration;
+        }
+
+        $floorUpdates = [
+            'common_area' => $floor->commonAreas()->sum('area') ?: null,
+        ];
+        if ($floorAreaSummary !== null && $floorAreaSummary !== '') {
+            $totalFlatArea = (float) $floor->flats()->sum('area');
+            $totalCommonArea = (float) $floor->commonAreas()->sum('area');
+            if (abs((float) $floorAreaSummary - $totalFlatArea - $totalCommonArea) > 0.01) {
+                throw ValidationException::withMessages([
+                    'floor_area_summary' => 'Total floor area must equal total flat area plus total common area.',
+                ]);
+            }
+            $floorUpdates['floor_area'] = (float) $floorAreaSummary;
+        }
+        $floor->update($floorUpdates);
     }
 
     private function storeFile(UploadedFile $file, int $buildingId): array

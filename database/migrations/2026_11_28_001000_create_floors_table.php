@@ -19,7 +19,6 @@ return new class extends Migration
             $table->decimal('common_area', 12, 2)->nullable();
             $table->text('description')->nullable();
             $table->text('notes')->nullable();
-            $table->json('configuration')->nullable();
             $table->string('status', 32)->default('planned');
             $table->softDeletes();
             $table->timestamps();

@@ -3,13 +3,6 @@
 @include('layouts.partials.sidebar')
 <div class="main-panel">
     <div class="content-wrapper">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('buildings.index') }}">Buildings</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ $building->name }}</li>
-            </ol>
-        </nav>
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
@@ -107,8 +100,8 @@
                                                 <td><span class="badge badge-{{ $building->statusBadgeColor() }}">{{ $building->statusLabel() }}</span></td>
                                             </tr>
                                             <tr>
-                                                <th>Description</th>
-                                                <td>
+                                                <th style="white-space: nowrap;">Description</th>
+                                                <td style="white-space: normal; overflow: visible; word-break: break-word;">
                                                     @if($building->description)
                                                         {!! nl2br(e($building->description)) !!}
                                                     @else
@@ -185,19 +178,6 @@
                                 Configured basement count: {{ $building->basement_count }}. Existing basement floor records: {{ $basementFloorCount }}.
                             </div>
                         @endif
-
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h4 class="card-title mb-1">Floors</h4>
-                                <p class="card-description mb-0">Floors are ordered by floor number.</p>
-                            </div>
-                            @can('floors-create')
-                                <a href="{{ route('buildings.floors.create', $building) }}" class="btn btn-primary">
-                                    <i class="ti-plus"></i> Add Floor
-                                </a>
-                            @endcan
-                        </div>
-
                         @can('floors-list')
                             <div class="table-responsive">
                                 <table class="table table-hover">
@@ -208,7 +188,6 @@
                                             <th>Type</th>
                                             <th>Area</th>
                                             <th>Status</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -221,33 +200,6 @@
                                                     {{ $floor->floor_area !== null ? number_format((float) $floor->floor_area, 2).' '.$floor->floor_area_unit : 'N/A' }}
                                                 </td>
                                                 <td><span class="badge badge-{{ $floor->statusBadgeColor() }}">{{ $floor->statusLabel() }}</span></td>
-                                                <td>
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-light btn-sm" type="button" data-toggle="dropdown"
-                                                                aria-haspopup="true" aria-expanded="false"
-                                                                aria-label="Actions for {{ $floor->name }}">
-                                                            <i class="ti-more-alt"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu dropdown-menu-right">
-                                                            @can('floors-view')
-                                                                <a href="{{ route('floors.show', $floor) }}" class="dropdown-item">
-                                                                    <i class="ti-eye mr-2"></i> View
-                                                                </a>
-                                                            @endcan
-                                                            @can('floors-edit')
-                                                                <a href="{{ route('floors.edit', $floor) }}" class="dropdown-item">
-                                                                    <i class="ti-settings mr-2"></i> Configure
-                                                                </a>
-                                                            @endcan
-                                                            @can('floors-delete')
-                                                                <button type="button" class="dropdown-item text-danger"
-                                                                        data-toggle="modal" data-target="#deleteFloorModal{{ $floor->id }}">
-                                                                    <i class="ti-trash mr-2"></i> Delete
-                                                                </button>
-                                                            @endcan
-                                                        </div>
-                                                    </div>
-                                                </td>
                                             </tr>
                                         @empty
                                             <tr><td colspan="6" class="text-center">No floors have been added to this building.</td></tr>
@@ -290,17 +242,6 @@
                         @include('buildings.partials.amenities')
                     </div>
                     <div class="tab-pane fade" id="building-floor-plans" role="tabpanel" aria-labelledby="building-floor-plans-tab">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h4 class="card-title mb-1">Floor Plans</h4>
-                                <p class="card-description mb-0">Plans uploaded for floors in this building.</p>
-                            </div>
-                            @can('floor-plans-create')
-                                <a href="{{ route('floor-plans.create', ['building_id' => $building->id]) }}" class="btn btn-primary">
-                                    <i class="ti-plus"></i> Upload Floor Plan
-                                </a>
-                            @endcan
-                        </div>
                         @can('floor-plans-list')
                             @include('floor-plans._table', ['floorPlans' => $building->floorPlans])
                         @else
@@ -311,5 +252,5 @@
             </div>
         </div>
     </div>
-</div>
+
 @include('layouts.partials.footer')

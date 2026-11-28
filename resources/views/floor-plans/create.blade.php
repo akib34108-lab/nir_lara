@@ -3,13 +3,6 @@
 @include('layouts.partials.sidebar')
 <div class="main-panel">
     <div class="content-wrapper">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('floor-plans.index') }}">Floor Plans</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Upload</li>
-            </ol>
-        </nav>
         <div class="card">
             <div class="card-body">
                 <h4 class="card-title">Upload Floor Plan</h4>
@@ -25,5 +18,4 @@
             </div>
         </div>
     </div>
-</div>
 @include('layouts.partials.footer')
